@@ -15,6 +15,7 @@ const svg = (paths: React.ReactNode, extra: Partial<typeof base> = {}) =>
 
 /* Header and contact icons, as drawn in the wireframe. */
 export const IconShare = svg(<><circle cx="6" cy="12" r="2.6" /><circle cx="17" cy="6.5" r="2.6" /><circle cx="17" cy="17.5" r="2.6" /><path d="m8.4 10.8 6.2-3.1M8.4 13.2l6.2 3.1" /></>, { strokeWidth: 1.9 })
+export const IconChat = svg(<><path d="M4 6a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6v7.5a2.5 2.5 0 0 1-2.5 2.5H9.2L5 19.4c-.4.3-1 0-1-.5V6Z" /><path d="m12.6 6.6.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" /></>)
 export const IconSearch = svg(<><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></>, { strokeWidth: 1.9 })
 export const IconPin = svg(<><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" /></>, { strokeWidth: 1.9 })
 export const IconHeadset = svg(<><path d="M4 13v-1a8 8 0 0 1 16 0v1" /><rect x="2.6" y="13" width="4.4" height="7" rx="2" /><rect x="17" y="13" width="4.4" height="7" rx="2" /><path d="M19 20v.6a2.4 2.4 0 0 1-2.4 2.4H13" /></>, { strokeWidth: 1.9 })

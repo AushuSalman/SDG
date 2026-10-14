@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
-import { IconSearch, IconShare } from './ui/icons'
+import { IconChat, IconShare } from './ui/icons'
 import { useUi } from './ui/UiProvider'
 
 const BUSINESSES = [
@@ -69,7 +69,7 @@ export function SiteHeader() {
           <Link href="/contact" aria-current={cur('/contact')}>Contact</Link>
         </nav>
         <button type="button" className="hdr-icon" aria-label="Share this page" title="Share" onClick={() => ui.openShare()}><IconShare /></button>
-        <button type="button" className="hdr-icon" aria-label="Ask SDG" title="Ask SDG" onClick={() => ui.openAI()}><IconSearch /></button>
+        <button type="button" className="hdr-icon" aria-label="Ask SDG" title="Ask SDG" onClick={() => ui.openAI()}><IconChat /></button>
         <Link href="/contact" className="hdr-pill">Start a conversation <i>↗</i></Link>
       </div>
     </header>

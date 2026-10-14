@@ -16,6 +16,7 @@ type Ui = {
   openShare: (o?: ShareOptions) => void
   openBrochure: (target: BrochureTarget) => void
   openLightbox: (src: string, caption?: string) => void
+  aiOpen: boolean
   projects: ProjectOption[]
   hoursText: string
   whatsapp: string
@@ -55,7 +56,7 @@ export function UiProvider({ children, projects, hoursText, whatsapp }: { childr
     return () => document.removeEventListener('keydown', esc)
   }, [lightbox])
 
-  const value = useMemo<Ui>(() => ({ toast, openAI, openBooking, openShare, openBrochure, openLightbox, projects, hoursText, whatsapp }), [toast, openAI, openBooking, openShare, openBrochure, openLightbox, projects, hoursText, whatsapp])
+  const value = useMemo<Ui>(() => ({ toast, openAI, openBooking, openShare, openBrochure, openLightbox, aiOpen: ai.open, projects, hoursText, whatsapp }), [toast, openAI, openBooking, openShare, openBrochure, openLightbox, ai.open, projects, hoursText, whatsapp])
 
   return (
     <UiContext.Provider value={value}>

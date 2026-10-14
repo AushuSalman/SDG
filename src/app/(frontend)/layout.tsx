@@ -3,6 +3,7 @@ import React from 'react'
 
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
+import { AiLauncher } from '@/components/ui/AiLauncher'
 import { CookieNotice } from '@/components/ui/CookieNotice'
 import { CtaDock } from '@/components/ui/CtaDock'
 import { UiProvider } from '@/components/ui/UiProvider'
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main id="top"><div className="view">{children}</div></main>
           <SiteFooter settings={settings} />
           <CtaDock />
+          <AiLauncher />
           <CookieNotice />
         </UiProvider>
       </body>
