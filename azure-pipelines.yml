@@ -1,0 +1,71 @@
+# Azure DevOps: build the Docker image in the pipeline (never on the server), push it to the registry,
+# then deploy to the Lightsail server over SSH with docker compose. Rollback = re-run with a previous tag.
+#
+# Variables to set in the pipeline (Library > variable group "sdg-platform"):
+#   REGISTRY_CONNECTION  service connection to the container registry (ACR or Docker Hub)
+#   REGISTRY_HOST        e.g. sdgplatform.azurecr.io
+#   SSH_CONNECTION       SSH service connection to the Lightsail server (key, not password)
+#   SITE_HEALTH_URL      e.g. https://www.sdg.in/api/site/health
+trigger:
+  branches:
+    include: [master, main]
+
+variables:
+  imageName: sdg-platform
+  imageTag: $(Build.BuildId)
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndTest
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - task: NodeTool@0
+            inputs: { versionSpec: '22.x' }
+          - script: npm ci --no-audit --no-fund
+            displayName: Install
+          - script: npm run typecheck
+            displayName: Type check
+          - script: npm run test:unit
+            displayName: Unit tests
+          - task: Docker@2
+            displayName: Build and push image
+            inputs:
+              command: buildAndPush
+              containerRegistry: $(REGISTRY_CONNECTION)
+              repository: $(imageName)
+              dockerfile: Dockerfile
+              tags: |
+                $(imageTag)
+                latest
+
+  - stage: Deploy
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: Lightsail
+        environment: production
+        pool: { vmImage: ubuntu-latest }
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: SSH@0
+                  displayName: Pull image and restart
+                  inputs:
+                    sshEndpoint: $(SSH_CONNECTION)
+                    runOptions: inline
+                    inline: |
+                      set -e
+                      cd /opt/sdg
+                      export APP_IMAGE=$(REGISTRY_HOST)/$(imageName):$(imageTag)
+                      docker compose pull app
+                      docker compose up -d
+                      docker image prune -f
+                - script: |
+                    for i in $(seq 1 12); do
+                      if curl -fsS "$(SITE_HEALTH_URL)" | grep -q '"ok":true'; then echo healthy; exit 0; fi
+                      sleep 10
+                    done
+                    echo "health check failed"; exit 1
+                  displayName: Smoke check

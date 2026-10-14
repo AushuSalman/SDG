@@ -1,0 +1,41 @@
+# Production on the Lightsail server (architecture v3): Caddy terminates HTTPS, the app runs as one container.
+# Deploy: docker compose pull && docker compose up -d
+services:
+  app:
+    image: ${APP_IMAGE:-sdg-platform:local}
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    expose:
+      - '3000'
+    volumes:
+      - uploads:/app/media        # used only when S3_BUCKET is empty
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/site/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      - SITE_DOMAIN=${SITE_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  uploads:
+  caddy_data:
+  caddy_config:
