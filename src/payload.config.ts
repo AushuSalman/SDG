@@ -44,7 +44,7 @@ const plugins: Plugin[] = process.env.S3_BUCKET
   : []
 
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined),
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : process.env.RENDER_EXTERNAL_URL || undefined),
   admin: {
     user: Users.slug,
     meta: { titleSuffix: ' · SDG admin' },

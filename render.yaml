@@ -1,0 +1,29 @@
+# Render blueprint for the temporary staging instance (development period only).
+# Production is the Lightsail container (docker-compose.yml + azure-pipelines.yml); this file does not affect it.
+# The service runs the same Docker image as production: it serves the site and admin and, being always-on,
+# drains the Payload job queue every minute against the Atlas database shared with the Vercel deployment.
+services:
+  - type: web
+    name: sdg
+    runtime: docker
+    repo: https://github.com/AushuSalman/SDG
+    branch: salman
+    region: singapore
+    plan: free            # starter keeps it awake; free sleeps after 15 idle minutes and the queue pauses with it
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/site/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false        # the Atlas connection string; same cluster as the Vercel project
+      - key: PAYLOAD_SECRET
+        sync: false        # same value as the Vercel project
+      - key: CRON_SECRET
+        sync: false
+      - key: AI_MODE
+        value: mock
+      - key: OTP_MODE
+        value: mock
+      - key: PAYLOAD_JOBS_AUTORUN
+        value: "true"
