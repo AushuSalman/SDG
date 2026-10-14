@@ -9,7 +9,8 @@ const dirname = path.dirname(__filename)
 const mediaHost = process.env.MEDIA_HOST // e.g. the CloudFront or S3 hostname serving uploads
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // The Docker image runs the standalone server; Vercel builds its own serverless output.
+  output: process.env.VERCEL ? undefined : 'standalone',
   images: {
     formats: ['image/avif', 'image/webp'],
     localPatterns: [{ pathname: '/api/media/file/**' }, { pathname: '/api/documents/file/**' }, { pathname: '/img/**' }],

@@ -44,7 +44,7 @@ const plugins: Plugin[] = process.env.S3_BUCKET
   : []
 
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || undefined,
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined),
   admin: {
     user: Users.slug,
     meta: { titleSuffix: ' · SDG admin' },
@@ -66,7 +66,9 @@ export default buildConfig({
     tasks,
     // The single container processes its own queue every minute (architecture v3: Payload jobs, no SQS).
     autoRun: [{ cron: '* * * * *', limit: 10, queue: 'default' }],
-    shouldAutoRun: () => process.env.PAYLOAD_JOBS_AUTORUN !== 'false',
+    // Serverless hosts (Vercel) have no long-lived process: there the queue is run by the cron in vercel.json
+    // or by the always-on Render instance sharing the same database.
+    shouldAutoRun: () => process.env.PAYLOAD_JOBS_AUTORUN !== 'false' && !process.env.VERCEL,
     access: {
       run: ({ req }) => {
         if (req.user) return true

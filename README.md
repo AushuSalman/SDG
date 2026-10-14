@@ -72,6 +72,30 @@ With a real database: copy `.env.example` to `.env`, fill `DATABASE_URL` and `PA
    `chunks_vector` on `document-chunks.embedding` (512 dimensions, cosine). Until the index exists,
    retrieval falls back to an in-process scan, which is fine at launch volume.
 
+## Staging on Vercel (temporary, during development)
+
+Production is the Docker container on AWS Lightsail (`Dockerfile`, `docker-compose.yml`, `azure-pipelines.yml`).
+For the development period the site runs on Vercel from this repo, with a free MongoDB Atlas cluster; nothing here
+changes the production path. `vercel.json` pins the Mumbai region and a daily cron that drains the job queue; the
+in-process queue runner is off on Vercel, so for minute-level processing run the same image on Render (or any
+always-on host) against the same database.
+
+Deploy from a machine with the Vercel CLI (`npx vercel login` once, or `VERCEL_TOKEN`):
+
+```bash
+npx vercel link                      # create or pick the project
+npx vercel env add DATABASE_URL production      # Atlas connection string
+npx vercel env add PAYLOAD_SECRET production    # 32+ random characters
+npx vercel env add AI_MODE production           # mock until Bedrock keys exist
+npx vercel env add OTP_MODE production          # mock: codes are shown on the form (staging only)
+npx vercel env add CRON_SECRET production       # lets the cron call /api/payload-jobs/run
+npx vercel deploy --prod
+DATABASE_URL=... PAYLOAD_SECRET=... npm run seed  # once, from your machine, to load the approved content
+```
+
+Known staging limits: uploads need `S3_BUCKET` (Vercel's filesystem is read-only), mock OTP must never be used
+for real customers, and `NEXT_PUBLIC_SERVER_URL` falls back to the Vercel production URL when unset.
+
 ## Not yet built (tracked for the sprints)
 
 PDF text extraction for documents (paste the text into the admin for now), the approved proposal PDF on

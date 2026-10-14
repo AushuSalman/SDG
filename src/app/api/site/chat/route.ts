@@ -6,6 +6,7 @@ import { getPayloadClient } from '@/lib/payload'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // streaming answers; serverless hosts cap the default lower
 
 const Body = z.object({
   sessionId: z.string().min(8).max(80),

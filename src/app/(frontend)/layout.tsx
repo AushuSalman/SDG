@@ -14,7 +14,7 @@ import './site.css'
 export const metadata: Metadata = {
   title: { default: 'Suvarna Durga Group · SDG', template: '%s · SDG Group' },
   description: 'Suvarna Durga Group: homes and commercial space, paper manufacturing and glass recycling in Hyderabad since 1978.',
-  metadataBase: process.env.NEXT_PUBLIC_SERVER_URL ? new URL(process.env.NEXT_PUBLIC_SERVER_URL) : undefined,
+  metadataBase: process.env.NEXT_PUBLIC_SERVER_URL ? new URL(process.env.NEXT_PUBLIC_SERVER_URL) : process.env.VERCEL_PROJECT_PRODUCTION_URL ? new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`) : undefined,
   openGraph: { siteName: 'Suvarna Durga Group', type: 'website', images: ['/img/hero.webp'] },
   twitter: { card: 'summary_large_image' },
   icons: { icon: '/img/sdg-logo.webp' },
