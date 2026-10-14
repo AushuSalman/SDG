@@ -1,14 +1,14 @@
-# files the Vercel CLI must not upload (local data, build output, secrets, scratch)
-.mongo-data
-.next
-node_modules
-media
-documents
-.env
-.env.*
-sdg.html
-tests
-playwright-report
-test-results
-.vscode
+# files the Vercel CLI must not upload (local data, build output, secrets, scratch). Patterns are anchored to the repo root.
+/.mongo-data
+/.next
+/node_modules
+/media
+/documents
+/.env
+/.env.*
+/sdg.html
+/tests
+/playwright-report
+/test-results
+/.vscode
 *.log

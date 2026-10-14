@@ -55,3 +55,4 @@ node_modules/
 
 # local MongoDB data written by scripts/dev-local.mjs
 /.mongo-data
+.env*
