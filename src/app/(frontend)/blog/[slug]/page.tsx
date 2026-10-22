@@ -7,6 +7,7 @@ import React from 'react'
 
 import { ShareButton } from '@/components/ui/actions'
 import { BUSINESS_LABEL, getPostBySlug, mediaUrl } from '@/lib/content'
+import { tagList } from '@/lib/richtext'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,10 +25,11 @@ export default async function PostPage({ params }: { params: Params }) {
   const post = await getPostBySlug(slug)
   if (!post) notFound()
   const date = post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  const tags = tagList(post.tags)
   return (
     <div className="wrap">
       <section className="co-hero">
-        <p className="co-kick">{BUSINESS_LABEL[post.business || 'group']} · {post.readMinutes || 4} min read{date ? ` · ${date}` : ''} {post.sample && <span className="tag sample" style={{ marginLeft: 8 }}>Sample</span>}</p>
+        <p className="co-kick">{BUSINESS_LABEL[post.business || 'group']}{post.author ? ` · ${post.author}` : ''} · {post.readMinutes || 4} min read{date ? ` · ${date}` : ''} {post.sample && <span className="tag sample" style={{ marginLeft: 8 }}>Sample</span>}</p>
         <h1>{post.title}</h1>
         <p className="lede">{post.excerpt}</p>
       </section>
@@ -36,6 +38,11 @@ export default async function PostPage({ params }: { params: Params }) {
         <div className="prose">
           {post.body && <RichText data={post.body} />}
         </div>
+        {tags.length > 0 && (
+          <div className="ptags" style={{ marginTop: 24 }}>
+            {tags.map((t) => <span className="ptag" key={t}>{t}</span>)}
+          </div>
+        )}
         <div className="btn-row" style={{ marginTop: 28 }}>
           <ShareButton shareTitle={post.title} path={`/blog/${post.slug}`}>Share</ShareButton>
           <Link className="btn ghost" href="/blog">All articles</Link>

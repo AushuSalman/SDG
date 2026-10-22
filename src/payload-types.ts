@@ -405,6 +405,14 @@ export interface Post {
    */
   excerpt: string;
   /**
+   * Byline on the article, e.g. Editorial Team
+   */
+  author?: string | null;
+  /**
+   * Comma-separated; shown under the article
+   */
+  tags?: string | null;
+  /**
    * For press coverage: the card links to this address and no page is made here
    */
   externalUrl?: string | null;
@@ -413,6 +421,9 @@ export interface Post {
    */
   source?: string | null;
   cover?: (string | null) | Media;
+  /**
+   * Use the toolbar for headings, lists, bold, links and pictures. Plain text pasted here is tidied when you save: lines starting with "- " or "1." become lists, short title lines become headings, **bold** marks become bold, and Author, Tags or Reading time lines at the top fill the fields above.
+   */
   body?: {
     root: {
       type: string;
@@ -1280,6 +1291,8 @@ export interface PostsSelect<T extends boolean = true> {
   readMinutes?: T;
   publishedAt?: T;
   excerpt?: T;
+  author?: T;
+  tags?: T;
   externalUrl?: T;
   source?: T;
   cover?: T;
