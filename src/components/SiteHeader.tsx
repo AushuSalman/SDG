@@ -67,7 +67,7 @@ export function SiteHeader() {
           <Drop id="biz" label="Our Businesses" items={BUSINESSES} path={path} open={open === 'biz'} onToggle={() => setOpen(open === 'biz' ? null : 'biz')} />
           <Drop id="about" label="About" items={ABOUT} path={path} open={open === 'about'} onToggle={() => setOpen(open === 'about' ? null : 'about')} />
           <Link href="/portal" aria-current={cur('/portal')}>My Portal</Link>
-          <Link href="/blog" aria-current={path.startsWith('/blog') ? 'page' : undefined}>News</Link>
+          <Link href="/blog" aria-current={path.startsWith('/blog') ? 'page' : undefined}>Blogs</Link>
           <Link href="/contact" aria-current={cur('/contact')}>Contact</Link>
         </nav>
         <button type="button" className="hdr-icon" aria-label="Share this page" title="Share" onClick={() => ui.openShare()}><IconShare /></button>

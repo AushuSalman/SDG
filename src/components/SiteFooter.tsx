@@ -16,7 +16,7 @@ type Settings = {
 
 const GROUP: [string, string][] = [
   ['/', 'Home'], ['/about', 'About us'], ['/about#legacy', 'Legacy'], ['/leadership', 'Leadership'], ['/about#csr', 'CSR'], ['/partnerships', 'Partnerships'], ['/careers', 'Careers'],
-  ['/blog', 'News & Events'], ['/portal', 'Client portal'], ['/contact', 'Contact'],
+  ['/blog', 'Blogs'], ['/portal', 'Client portal'], ['/contact', 'Contact'],
 ]
 const VERTICALS: [string, string][] = [
   ['/real-estate', 'Suvarna Durga Constructions'], ['/paper', 'Suvarna Durga Paper'], ['/glass', 'Suvarna Durga Bottles'],

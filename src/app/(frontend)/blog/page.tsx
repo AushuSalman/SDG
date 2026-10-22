@@ -7,7 +7,7 @@ import { BUSINESS_LABEL, getPosts, mediaUrl } from '@/lib/content'
 import type { Post } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'News & Blogs', description: 'Press coverage and articles from Suvarna Durga Group: constructions, paper and glass bottles.' }
+export const metadata: Metadata = { title: 'Blogs', description: 'Press coverage and articles from Suvarna Durga Group: constructions, paper and glass bottles.' }
 
 const COVER: Record<string, string> = { construction: '/img/homedusk.webp', paper: '/img/papermill.webp', glass: '/img/cullet.webp', agro: '/img/sdg/agro.jpg', group: '/img/hero.webp' }
 const TAG: Record<string, string> = { construction: 'ptag', paper: 'ptag going', glass: 'ptag done', agro: 'ptag soon', group: 'ptag soon' }
@@ -39,7 +39,7 @@ export default async function BlogPage() {
     <section className="co-section" style={{ paddingTop: 34 }}>
       <div className="wrap">
         <div className="projects-head">
-          <div><p className="process-kick">News &amp; Blogs</p><h2 className="biz-h2">From the Group.</h2></div>
+          <div><p className="process-kick">Blogs</p><h2 className="biz-h2">From the Group.</h2></div>
           {anySample && <span className="demochip">Sample content</span>}
         </div>
         {posts.length === 0 && <p className="lede">Articles are on their way. Published posts appear here.</p>}
