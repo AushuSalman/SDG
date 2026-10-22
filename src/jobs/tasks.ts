@@ -1,7 +1,8 @@
 import type { Payload, TaskConfig } from 'payload'
 
 import { chunkText, embedText } from '@/lib/ai/embed'
-import { createLead, propfloConfigured } from '@/lib/integrations/propflo'
+import { CRM_LABEL, createLead, crmProvider } from '@/lib/integrations/crm'
+import { buildEvent, calendarConfigured, createEvent, refreshTokens } from '@/lib/integrations/graph'
 import { sendEmail } from '@/lib/integrations/ses'
 import { sendTemplate } from '@/lib/integrations/whatsapp'
 
@@ -15,6 +16,15 @@ async function getEnquiry(payload: Payload, id: string) {
   const customer = typeof enquiry.customer === 'object' ? enquiry.customer : await payload.findByID({ collection: 'customers', id: asId(enquiry.customer), overrideAccess: true })
   const project = enquiry.project && typeof enquiry.project === 'object' ? enquiry.project : null
   return { enquiry, customer, project }
+}
+
+/**
+ * Writes only the given top-level fields of an enquiry. The three jobs queued for a new enquiry run in parallel,
+ * and payload.update() rewrites the whole document from a copy read a moment earlier, so two jobs finishing
+ * together lost each other's result (the WhatsApp status stayed "pending"). A $set-style write has no such window.
+ */
+async function patchEnquiry(payload: Payload, id: number | string, data: Record<string, unknown>) {
+  await payload.db.updateOne({ collection: 'enquiries', id, data, returning: false })
 }
 
 export const indexDocument: TaskConfig<'indexDocument'> = {
@@ -54,19 +64,21 @@ export const indexDocument: TaskConfig<'indexDocument'> = {
   },
 }
 
-export const propfloSync: TaskConfig<'propfloSync'> = {
-  slug: 'propfloSync',
+/** Pushes the enquiry to the configured CRM (PropFlo, or HubSpot on staging) and keeps the contact ID on the customer. */
+export const crmSync: TaskConfig<'crmSync'> = {
+  slug: 'crmSync',
   retries,
   inputSchema: [{ name: 'enquiryId', type: 'text', required: true }],
   handler: async ({ input, req }) => {
     const payload = req.payload
     const { enquiry, customer, project } = await getEnquiry(payload, input.enquiryId)
-    if (!propfloConfigured()) {
-      await payload.update({ collection: 'enquiries', id: enquiry.id, data: { crm: { ...enquiry.crm, syncStatus: 'skipped', lastError: 'PropFlo not configured' } }, overrideAccess: true })
-      return { output: { propfloId: '' } }
+    const provider = crmProvider()
+    if (!provider) {
+      await patchEnquiry(payload, enquiry.id, { crm: { ...enquiry.crm, syncStatus: 'skipped', lastError: 'No CRM configured (PROPFLO_API_URL + PROPFLO_API_KEY, or HUBSPOT_ACCESS_TOKEN)' } })
+      return { output: { leadId: '' } }
     }
     try {
-      const { id } = await createLead({
+      const { id, contactId } = await createLead({
         name: customer.name,
         mobile: customer.phone,
         email: customer.email,
@@ -82,10 +94,67 @@ export const propfloSync: TaskConfig<'propfloSync'> = {
         band: enquiry.band,
         websiteEnquiryId: String(enquiry.id),
       })
-      await payload.update({ collection: 'enquiries', id: enquiry.id, data: { crm: { propfloId: id, syncStatus: 'synced', syncedAt: new Date().toISOString(), lastError: '' } }, overrideAccess: true })
-      return { output: { propfloId: id } }
+      await patchEnquiry(payload, enquiry.id, { crm: { provider: CRM_LABEL[provider], leadId: id, syncStatus: 'synced', syncedAt: new Date().toISOString(), lastError: '' } })
+      // The CRM's contact record, kept on the customer so later enquiries attach to the same person.
+      if (contactId && customer.crmContactId !== contactId) {
+        await payload.update({ collection: 'customers', id: customer.id, data: { crmContactId: contactId }, overrideAccess: true })
+      }
+      return { output: { leadId: id } }
     } catch (err) {
-      await payload.update({ collection: 'enquiries', id: enquiry.id, data: { crm: { ...enquiry.crm, syncStatus: 'failed', lastError: String(err).slice(0, 300) } }, overrideAccess: true })
+      await patchEnquiry(payload, enquiry.id, { crm: { ...enquiry.crm, syncStatus: 'failed', lastError: String(err).slice(0, 300) } })
+      throw err
+    }
+  },
+}
+
+/**
+ * Books a confirmed scheduler request on the consultant's connected Outlook calendar. Runs once the visitor has
+ * verified their number; skipped (never failed) when the calendar is not configured or not connected.
+ */
+export const calendarBook: TaskConfig<'calendarBook'> = {
+  slug: 'calendarBook',
+  retries,
+  inputSchema: [{ name: 'enquiryId', type: 'text', required: true }],
+  handler: async ({ input, req }) => {
+    const payload = req.payload
+    const { enquiry, customer, project } = await getEnquiry(payload, input.enquiryId)
+    const m = enquiry.meeting
+    if (!m?.date || !m.time) return { output: { eventId: '' } }
+    const skip = async (why: string) => {
+      await patchEnquiry(payload, enquiry.id, { meeting: { ...m, calendarStatus: 'skipped', lastError: why } })
+      return { output: { eventId: '' } }
+    }
+    if (!calendarConfigured()) return skip('Microsoft calendar not configured (MS_CLIENT_ID, MS_CLIENT_SECRET)')
+    const consultantId = enquiry.consultant ? asId(enquiry.consultant) : ''
+    if (!consultantId) return skip('No consultant chosen for the meeting')
+    const consultant = await payload.findByID({ collection: 'consultants', id: consultantId, depth: 0, overrideAccess: true })
+    const refresh = consultant.calendar?.refreshToken
+    if (!refresh) return skip(`${consultant.name} has not connected an Outlook calendar`)
+    try {
+      const tokens = await refreshTokens(refresh)
+      if (tokens.refresh_token && tokens.refresh_token !== refresh) {
+        await payload.update({ collection: 'consultants', id: consultant.id, data: { calendar: { ...consultant.calendar, refreshToken: tokens.refresh_token } }, overrideAccess: true })
+      }
+      const minutes = Number(process.env.MEETING_MINUTES) || 45
+      const online = /video|online|teams/i.test(m.mode || '')
+      const subject = `SDG consultation: ${customer.name || customer.phone}${project ? ` · ${project.name}` : ''}`
+      const bodyText = [
+        `${customer.name || 'A visitor'} requested a ${m.mode || 'meeting'} through the SDG website.`,
+        `Phone: ${customer.phone}${customer.email ? `\nEmail: ${customer.email}` : ''}`,
+        project ? `Project: ${project.name}` : '',
+        enquiry.message ? `Notes: ${enquiry.message}` : '',
+        `Lead score: ${enquiry.score ?? '-'} (${enquiry.band || '-'})`,
+        `Enquiry ${enquiry.id} in the SDG admin.`,
+      ].filter(Boolean).join('\n')
+      const event = await createEvent(tokens.access_token, buildEvent({
+        subject, bodyText, date: m.date, time: m.time, minutes, online,
+        location: m.mode || undefined,
+        attendees: customer.email ? [{ email: customer.email, name: customer.name }] : [],
+      }))
+      await patchEnquiry(payload, enquiry.id, { meeting: { ...m, calendarStatus: 'booked', eventId: event.id, eventLink: event.webLink || '', joinUrl: event.joinUrl || '', bookedAt: new Date().toISOString(), lastError: '' } })
+      return { output: { eventId: event.id } }
+    } catch (err) {
+      await patchEnquiry(payload, enquiry.id, { meeting: { ...m, calendarStatus: 'failed', lastError: String(err).slice(0, 300) } })
       throw err
     }
   },
@@ -106,12 +175,7 @@ export const whatsappSend: TaskConfig<'whatsappSend'> = {
       template: input.template,
       bodyParams: [{ type: 'text', text: customer.name || 'there' }, { type: 'text', text: project?.name || 'SDG' }],
     })
-    await payload.update({
-      collection: 'enquiries',
-      id: enquiry.id,
-      data: { acknowledgement: { whatsappStatus: res.mock ? 'skipped' : 'sent', whatsappAt: new Date().toISOString() } },
-      overrideAccess: true,
-    })
+    await patchEnquiry(payload, enquiry.id, { acknowledgement: { whatsappStatus: res.mock ? 'skipped' : 'sent', whatsappAt: new Date().toISOString() } })
     return { output: { sent: !res.mock } }
   },
 }
@@ -163,7 +227,7 @@ export const consultantAllocate: TaskConfig<'consultantAllocate'> = {
     )
     scored.sort((a, b) => b.key - a.key)
     const chosen = scored[0].c
-    await payload.update({ collection: 'enquiries', id: enquiry.id, data: { consultant: chosen.id }, overrideAccess: true })
+    await patchEnquiry(payload, enquiry.id, { consultant: chosen.id })
     await payload.jobs.queue({
       task: 'emailSend',
       input: {
@@ -214,4 +278,4 @@ export const retentionSweep: TaskConfig<'retentionSweep'> = {
   },
 }
 
-export const tasks = [indexDocument, propfloSync, whatsappSend, emailSend, consultantAllocate, notifyConsultant, retentionSweep]
+export const tasks = [indexDocument, crmSync, calendarBook, whatsappSend, emailSend, consultantAllocate, notifyConsultant, retentionSweep]

@@ -4,7 +4,8 @@ import { canEditContent } from '@/lib/access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
-  admin: { group: 'Content' },
+  labels: { singular: 'Image or file', plural: 'Images & files' },
+  admin: { group: 'Website', description: 'Images and files used across the site.', listSearchableFields: ['alt', 'filename'] },
   access: {
     read: () => true,
     create: canEditContent,
@@ -21,7 +22,7 @@ export const Media: CollectionConfig = {
     adminThumbnail: 'thumb',
   },
   fields: [
-    { name: 'alt', type: 'text', required: true },
-    { name: 'credit', type: 'text' },
+    { name: 'alt', type: 'text', label: 'Alt text', required: true, admin: { description: 'Describe the image in a few words; read by screen readers and search engines' } },
+    { name: 'credit', type: 'text', label: 'Photo credit', admin: { description: 'Shown under the photo in project galleries' } },
   ],
 }

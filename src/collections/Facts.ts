@@ -8,10 +8,13 @@ import { canEditContent, canPublish } from '@/lib/access'
  */
 export const Facts: CollectionConfig = {
   slug: 'facts',
+  labels: { singular: 'Approved fact', plural: 'Approved facts & numbers' },
   admin: {
     useAsTitle: 'claim',
-    group: 'Content',
+    group: 'Website',
+    description: 'Approved numbers and claims such as employees, years and built-up area. The site and the AI assistant quote only what is here.',
     defaultColumns: ['factId', 'category', 'claim', 'status', 'approvedBy'],
+    listSearchableFields: ['claim', 'wording', 'factId'],
   },
   access: {
     read: ({ req }) => (req.user ? true : { status: { equals: 'approved' } }),
@@ -36,7 +39,7 @@ export const Facts: CollectionConfig = {
   },
   fields: [
     { type: 'row', fields: [
-      { name: 'factId', type: 'text', admin: { description: 'e.g. SDG-004' } },
+      { name: 'factId', type: 'text', label: 'Fact ID', admin: { description: 'e.g. SDG-004' } },
       {
         name: 'category',
         type: 'select',
@@ -58,12 +61,12 @@ export const Facts: CollectionConfig = {
         name: 'business',
         type: 'select',
         defaultValue: 'group',
-        options: ['group', 'construction', 'paper', 'glass'],
+        options: ['group', 'construction', 'paper', 'glass', 'agro'],
       },
     ] },
     { name: 'claim', type: 'text', required: true, admin: { description: 'The field or claim, e.g. Employees' } },
-    { name: 'wording', type: 'textarea', required: true, admin: { description: 'Approved public wording' } },
-    { name: 'value', type: 'text', admin: { description: 'Short value for stat tiles, e.g. 800+' } },
+    { name: 'wording', type: 'textarea', label: 'Public wording', required: true, admin: { description: 'Approved public wording' } },
+    { name: 'value', type: 'text', label: 'Short value', admin: { description: 'Short value for stat tiles, e.g. 800+' } },
     {
       name: 'status',
       type: 'select',
@@ -80,7 +83,7 @@ export const Facts: CollectionConfig = {
       { name: 'approvedAt', type: 'date' },
     ] },
     { name: 'source', type: 'text', admin: { description: 'Where it came from, e.g. Corporate presentation p.8' } },
-    { name: 'showOnHome', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
+    { name: 'showOnHome', type: 'checkbox', label: 'Show on home page', defaultValue: false, admin: { position: 'sidebar' } },
     { name: 'order', type: 'number', defaultValue: 100, admin: { position: 'sidebar' } },
   ],
 }

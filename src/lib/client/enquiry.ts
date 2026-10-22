@@ -29,9 +29,6 @@ export async function post<T = Record<string, unknown>>(url: string, body: unkno
   return json
 }
 
-export const VISIT_HOURS = 'Mon–Sat, 09:30–18:30 IST'
-export const VISIT_SLOTS = ['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30']
-
 export const visitDay = (n: number): string => {
   const d = new Date()
   d.setDate(d.getDate() + n)

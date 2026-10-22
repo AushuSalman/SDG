@@ -1,0 +1,738 @@
+/*
+  SDG admin: Payload's own views (lists, editors, sign-in, header) restyled to match the TailAdmin shell
+  (Outfit, gray-50 canvas, white rounded-2xl cards, brand blue #465FFF). The dashboard and sidebar are
+  TailAdmin components; see tailadmin.css for the Tailwind side. Rules here are unlayered on purpose so they win
+  over Payload's `payload-default` layer whatever the load order. The public site is untouched: it lives in the
+  (frontend) route group with its own stylesheet.
+*/
+
+:root {
+  /* Payload derives its elevation steps from this scale; mapped onto TailAdmin's gray palette. */
+  --color-base-0: #ffffff;
+  --color-base-50: #f9fafb;
+  --color-base-100: #f2f4f7;
+  --color-base-150: #e4e7ec;
+  --color-base-200: #d0d5dd;
+  --color-base-250: #c0c7d3;
+  --color-base-300: #aeb6c4;
+  --color-base-350: #98a2b3;
+  --color-base-400: #7d8799;
+  --color-base-450: #667085;
+  --color-base-500: #5c6a80;
+  --color-base-550: #52607a;
+  --color-base-600: #475467;
+  --color-base-650: #3e4a5d;
+  --color-base-700: #344054;
+  --color-base-750: #2a3547;
+  --color-base-800: #1d2939;
+  --color-base-850: #182230;
+  --color-base-900: #101828;
+  --color-base-950: #0c111d;
+  --color-base-1000: #000000;
+
+  /* Semantic scales in TailAdmin's colours (Payload reads these for pills, banners, toasts and focus). */
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-150: #bdf5d0;
+  --color-success-200: #a6f4c5;
+  --color-success-250: #89efb6;
+  --color-success-300: #6ce9a6;
+  --color-success-350: #4fdf95;
+  --color-success-400: #32d583;
+  --color-success-450: #22c676;
+  --color-success-500: #12b76a;
+  --color-success-550: #0ba860;
+  --color-success-600: #039855;
+  --color-success-650: #03894f;
+  --color-success-700: #027a48;
+  --color-success-750: #046d41;
+  --color-success-800: #05603a;
+  --color-success-850: #055836;
+  --color-success-900: #054f31;
+  --color-success-950: #053321;
+
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-150: #fed8d6;
+  --color-error-200: #fecdca;
+  --color-error-250: #fdb8b2;
+  --color-error-300: #fda29b;
+  --color-error-350: #fb8980;
+  --color-error-400: #f97066;
+  --color-error-450: #f55a4f;
+  --color-error-500: #f04438;
+  --color-error-550: #e4382c;
+  --color-error-600: #d92d20;
+  --color-error-650: #c7281c;
+  --color-error-700: #b42318;
+  --color-error-750: #a22118;
+  --color-error-800: #912018;
+  --color-error-850: #852319;
+  --color-error-900: #7a271a;
+  --color-error-950: #55160c;
+
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef0c7;
+  --color-warning-150: #fee8a8;
+  --color-warning-200: #fedf89;
+  --color-warning-250: #fed46a;
+  --color-warning-300: #fec84b;
+  --color-warning-350: #fdbc36;
+  --color-warning-400: #fdb022;
+  --color-warning-450: #faa015;
+  --color-warning-500: #f79009;
+  --color-warning-550: #e97c06;
+  --color-warning-600: #dc6803;
+  --color-warning-650: #c85806;
+  --color-warning-700: #b54708;
+  --color-warning-750: #a43f0a;
+  --color-warning-800: #93370d;
+  --color-warning-850: #86330d;
+  --color-warning-900: #7a2e0e;
+  --color-warning-950: #4e1d09;
+
+  --theme-bg: #f9fafb;
+  --theme-input-bg: #ffffff;
+  --theme-text: #1d2939;
+  --theme-border-color: #e4e7ec;
+  --theme-overlay: rgba(16, 24, 40, 0.5);
+
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Payload sets the rich-text editor in Georgia; keep the whole admin in one typeface. */
+  --font-serif: var(--font-body);
+  --style-radius-s: 8px;
+  --style-radius-m: 12px;
+  --style-radius-l: 16px;
+  --app-header-height: 76px;
+  --doc-controls-height: 64px;
+
+  --ta-brand: #465fff;
+  --ta-brand-600: #3641f5;
+  --ta-brand-300: #9cb9ff;
+  --ta-brand-50: #ecf3ff;
+  --ta-ring: 0 0 0 3px rgba(70, 95, 255, 0.12);
+  --ta-gray-50: #f9fafb;
+  --ta-gray-100: #f2f4f7;
+  --ta-gray-200: #e4e7ec;
+  --ta-gray-300: #d0d5dd;
+  --ta-gray-400: #98a2b3;
+  --ta-gray-500: #667085;
+  --ta-gray-700: #344054;
+  --ta-gray-800: #1d2939;
+  --ta-shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --ta-shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+}
+
+@media (min-width: 769px) {
+  :root {
+    --nav-width: 290px;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --app-header-height: 64px;
+    --doc-controls-height: 56px;
+  }
+}
+
+html {
+  background: var(--theme-bg);
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--ta-brand-50);
+  color: var(--ta-gray-800);
+}
+
+/* ---------- Headings ---------- */
+h1,
+h2,
+h3,
+.list-header__title,
+.doc-header__title {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--ta-gray-800);
+  letter-spacing: 0;
+}
+
+.list-header__title,
+.doc-header__title {
+  font-size: 24px;
+  line-height: 32px;
+}
+
+/* ---------- Sidebar wrapper (the content inside is the TailAdmin sidebar) ---------- */
+.nav {
+  background: #fff;
+  border-right: 1px solid var(--ta-gray-200);
+}
+
+.nav__scroll {
+  padding: 0;
+}
+
+/* ---------- Header: white bar with a hairline, like TailAdmin's ---------- */
+.app-header__bg {
+  opacity: 1;
+  background: #fff;
+  border-bottom: 1px solid var(--ta-gray-200);
+}
+
+.app-header__content {
+  padding-right: 24px;
+}
+
+.step-nav a,
+.step-nav span {
+  font-size: 14px;
+  color: var(--ta-gray-500);
+  font-weight: 500;
+}
+
+.step-nav a:hover {
+  color: var(--ta-gray-800);
+  text-decoration: none;
+}
+
+.step-nav__home {
+  width: 24px;
+  height: 24px;
+}
+
+.sdg-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.app-header__account {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--ta-gray-200);
+  background: var(--ta-gray-100);
+}
+
+.app-header__account svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Payload's sidebar toggle sits in the content gutter; with the sidebar open it would cover the logo, so slide it
+   over to the content side on desktop (on phones the sidebar overlays the page and has its own close button). */
+@media (min-width: 769px) {
+  /* The toggle wrapper is the sibling just before Payload's template wrapper, hence the sibling :has(). */
+  .template-default__nav-toggler-wrapper:has(+ .template-default--nav-open) {
+    transform: translateX(var(--nav-width));
+  }
+}
+
+.hamburger {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--ta-gray-200);
+  background: #fff;
+  color: var(--ta-gray-500);
+}
+
+.hamburger:hover {
+  background: var(--ta-gray-100);
+  box-shadow: 0 0 0 1px var(--ta-gray-300);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  --btn-font-weight: 500;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.btn--size-medium:not(.btn--icon-only) {
+  --btn-line-height: 24px;
+  --btn-padding-block-start: 9px;
+  --btn-padding-block-end: 9px;
+  --btn-padding-inline-start: 16px;
+  --btn-padding-inline-end: 16px;
+}
+
+.btn--style-primary {
+  --bg-color: var(--ta-brand);
+  --color: #ffffff;
+  --hover-bg: var(--ta-brand-600);
+  --hover-color: #ffffff;
+  box-shadow: var(--ta-shadow-xs);
+}
+
+.btn--style-primary.btn--disabled {
+  --bg-color: var(--ta-brand-300);
+  --color: #ffffff;
+}
+
+.btn--style-secondary {
+  --color: var(--ta-gray-700);
+  --bg-color: #ffffff;
+  --btn-border: 1px solid var(--ta-gray-300);
+  --hover-bg: var(--ta-gray-50);
+  --hover-color: var(--ta-gray-800);
+  --hover-btn-border: 1px solid var(--ta-gray-300);
+  box-shadow: var(--ta-shadow-xs);
+}
+
+.btn--style-pill {
+  --bg-color: var(--ta-gray-100);
+  --color: var(--ta-gray-700);
+  --hover-bg: var(--ta-gray-200);
+  --hover-color: var(--ta-gray-800);
+  border-radius: 8px;
+}
+
+/* ---------- List views: white cards ---------- */
+.collection-list,
+.global-edit,
+.collection-edit {
+  padding-top: 8px;
+}
+
+.list-header {
+  margin-bottom: 16px;
+}
+
+.list-header__create-new-button.btn--style-pill,
+.list-create-new-doc__create-new-button.btn--style-pill {
+  --bg-color: var(--ta-brand);
+  --color: #ffffff;
+  --hover-bg: var(--ta-brand-600);
+  --hover-color: #ffffff;
+  box-shadow: var(--ta-shadow-xs);
+}
+
+.list-controls {
+  background: #fff;
+  border: 1px solid var(--ta-gray-200);
+  border-radius: 16px;
+  padding: 14px 20px;
+  margin-bottom: 12px;
+}
+
+/* Payload's search bar is a grid: the magnifier sits in a 40px first column and the input spans across it with
+   padding-inline-start: var(--icon-width). The wrapper gets the TailAdmin input look; the input itself stays
+   borderless and keeps Payload's icon padding, so the placeholder never sits under the icon. */
+.search-bar {
+  --search-bg: #ffffff;
+  --icon-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--ta-gray-300);
+  border-radius: 8px;
+  box-shadow: var(--ta-shadow-xs);
+  transition: border-color 100ms, box-shadow 100ms;
+}
+
+.search-bar:focus-within {
+  border-color: var(--ta-brand-300);
+  box-shadow: var(--ta-ring);
+}
+
+.search-bar .icon--search {
+  color: var(--ta-gray-400);
+}
+
+.search-filter__input,
+.search-filter__input:not(:disabled):hover,
+.search-filter__input:not(:disabled):focus {
+  border: 0;
+  box-shadow: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ta-gray-800);
+}
+
+.search-filter__input::placeholder {
+  color: var(--ta-gray-400);
+  font-size: 14px;
+}
+
+.search-bar .search-filter__input {
+  padding-inline-start: var(--icon-width);
+  padding-inline-end: 16px;
+}
+
+/* Below Payload's small break the bar is two rows (input, then the Columns/Filters pills) on a transparent
+   background, so the input box carries the border there instead of the wrapper. */
+@media (max-width: 768px) {
+  .search-bar {
+    border: 0;
+    box-shadow: none;
+  }
+
+  .search-bar .search-filter {
+    background: #fff;
+    border: 1px solid var(--ta-gray-300);
+    border-radius: 8px;
+    box-shadow: var(--ta-shadow-xs);
+  }
+
+  .search-bar:focus-within .search-filter {
+    border-color: var(--ta-brand-300);
+    box-shadow: var(--ta-ring);
+  }
+}
+
+.table-wrap {
+  background: #fff;
+  border: 1px solid var(--ta-gray-200);
+  border-radius: 16px;
+  padding: 4px 8px 8px;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+/* Tailwind generates a `.table { display: table }` utility because the word appears in the admin markup, and its
+   utilities layer sits after Payload's; Payload's .table is a scrolling wrapper div, so restore its layout. */
+div.table {
+  display: block;
+}
+
+.table thead th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ta-gray-500);
+  padding: 12px;
+  border-bottom: 1px solid var(--ta-gray-100);
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  font-size: 14px;
+  min-width: 120px;
+}
+
+.table tbody tr:nth-child(odd) {
+  background: transparent;
+}
+
+.table tbody td {
+  border-bottom: 1px solid var(--ta-gray-100);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover td {
+  background: var(--ta-gray-50);
+}
+
+.table td a {
+  color: var(--ta-gray-800);
+  font-weight: 500;
+}
+
+.per-page,
+.pagination {
+  font-size: 14px;
+  color: var(--ta-gray-500);
+}
+
+/* Below 1024px Payload turns the list table into a full-bleed horizontal scroller; drop the card there. */
+@media (max-width: 1024px) {
+  .table-wrap {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .collection-list .table {
+    display: flex; /* Payload's full-bleed layout, re-stated after the div.table rule above */
+    background: #fff;
+    border-top: 1px solid var(--ta-gray-200);
+    border-bottom: 1px solid var(--ta-gray-200);
+    overflow-x: auto; /* keep wide tables scrolling inside the page instead of widening the phone viewport */
+  }
+
+  .table th,
+  .table td {
+    min-width: 110px;
+  }
+}
+
+/* ---------- Pills / status badges ---------- */
+.pill {
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  padding: 2px 10px;
+}
+
+.pill--style-success {
+  background: #ecfdf3;
+  color: #039855;
+}
+
+.pill--style-warning {
+  background: #fffaeb;
+  color: #dc6803;
+}
+
+.pill--style-error {
+  background: #fef3f2;
+  color: #d92d20;
+}
+
+.pill--style-light,
+.pill--style-light-gray,
+.pill--style-white {
+  background: var(--ta-gray-100);
+  color: var(--ta-gray-700);
+}
+
+.pill--style-dark {
+  background: var(--ta-gray-800);
+  color: #fff;
+}
+
+/* ---------- Editors ---------- */
+.doc-controls {
+  --theme-bg: #ffffff;
+  border-bottom: 1px solid var(--ta-gray-200);
+}
+
+.doc-header::after {
+  background: var(--ta-gray-200);
+}
+
+.document-fields__edit {
+  background: #fff;
+  border: 1px solid var(--ta-gray-200);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.document-fields__sidebar-wrap {
+  background: #fff;
+  border-left: 1px solid var(--ta-gray-200);
+}
+
+.document-fields--force-sidebar-wrap .document-fields__sidebar-wrap {
+  border-left: 0;
+  border-top: 1px solid var(--ta-gray-200);
+}
+
+.field-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ta-gray-700);
+}
+
+.field-description {
+  font-size: 12px;
+  color: var(--ta-gray-500);
+}
+
+.field-type input:not([type='checkbox']):not([type='radio']),
+.field-type textarea,
+.react-select .rs__control,
+.date-time-picker input,
+.login-fields input {
+  border-radius: 8px;
+  border: 1px solid var(--ta-gray-300);
+  background: #fff;
+  box-shadow: var(--ta-shadow-xs);
+  font-size: 14px;
+  color: var(--ta-gray-800);
+  font-family: var(--font-body);
+}
+
+.field-type input:not([type='checkbox']):not([type='radio']),
+.react-select .rs__control,
+.date-time-picker input,
+.login-fields input {
+  min-height: 44px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.field-type textarea {
+  min-height: 110px;
+  padding: 12px 16px;
+}
+
+.field-type input:focus,
+.field-type textarea:focus,
+.login-fields input:focus,
+.react-select .rs__control--is-focused {
+  border-color: var(--ta-brand-300);
+  box-shadow: var(--ta-ring);
+  outline: none;
+}
+
+.field-type input::placeholder,
+.field-type textarea::placeholder {
+  color: var(--ta-gray-400);
+}
+
+.checkbox-input--checked {
+  --theme-elevation-800: var(--ta-brand);
+  --theme-elevation-1000: var(--ta-brand);
+}
+
+.collapsible {
+  border: 1px solid var(--ta-gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.collapsible__toggle-wrap {
+  background: var(--ta-gray-50);
+  border-radius: 0;
+}
+
+.tabs-field__tabs-wrap {
+  background: var(--ta-gray-100);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.tabs-field__tab-button {
+  border-radius: 6px;
+  font-weight: 500;
+  color: var(--ta-gray-500);
+}
+
+.tabs-field__tab-button--active {
+  background: #fff;
+  color: var(--ta-gray-800);
+  box-shadow: var(--ta-shadow-xs);
+}
+
+/* ---------- Popups, drawers, toasts ---------- */
+.popup__content {
+  border-radius: 12px;
+  border: 1px solid var(--ta-gray-200);
+  box-shadow: var(--ta-shadow-lg);
+}
+
+.drawer__content {
+  background: var(--ta-gray-50);
+}
+
+/* ---------- Sign-in and other minimal pages: TailAdmin's split auth layout ---------- */
+.template-minimal {
+  background: #fff;
+  min-height: 100vh;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  justify-items: center;
+}
+
+.template-minimal--width-normal .template-minimal__wrap {
+  max-width: 420px;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .template-minimal {
+    grid-template-columns: 1fr 1fr;
+    padding: 0;
+  }
+
+  .template-minimal::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    background:
+      radial-gradient(600px 360px at 50% 50%, rgba(70, 95, 255, 0.25), transparent 70%),
+      #161950 url('/img/sdg-logo.webp') center / 260px auto no-repeat;
+  }
+}
+
+.login__brand {
+  justify-content: flex-start;
+  margin-bottom: 28px;
+}
+
+.sdg-logo img {
+  width: 150px;
+  height: auto;
+}
+
+.template-minimal .form-submit .btn {
+  width: 100%;
+  --btn-line-height: 26px;
+  --btn-padding-block-start: 9px;
+  --btn-padding-block-end: 9px;
+}
+
+.template-minimal a {
+  color: var(--ta-brand);
+}
+
+.template-minimal .field-label {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 768px) {
+  .list-header__title,
+  .doc-header__title {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .document-fields__edit {
+    padding: 16px;
+    border-radius: 12px;
+  }
+}
+
+/* ---------- Phones: sidebar open ---------- */
+/* Below 768px Payload's grid gives the sidebar the full width and the page column none, so the page wrapped letter
+   by letter in the sliver beside the sidebar and the phone zoomed out to fit the overflow. Keep the page at full
+   width (pushed off canvas behind the sidebar) and clip the horizontal overflow. */
+@media (max-width: 768px) {
+  .template-default--nav-open .template-default__wrap {
+    min-width: 100vw;
+  }
+
+  html:has(.template-default--nav-open),
+  html:has(.template-default--nav-open) body {
+    overflow-x: hidden;
+  }
+}
+
+/* ---------- Phones: no horizontal overflow ---------- */
+/* A long unbroken title or the document meta row could widen the page by a few pixels on a phone, which makes the
+   browser zoom out. Let titles wrap anywhere and clip anything that still overflows the page column. */
+@media (max-width: 768px) {
+  .doc-header__title,
+  .list-header__title {
+    overflow-wrap: anywhere;
+  }
+
+  .template-default__wrap {
+    overflow-x: clip;
+  }
+
+  /* The breadcrumb wrapper is width: 100% with min-width: auto, so a long document title pushed the avatar past the
+     edge of the header; letting it shrink keeps the breadcrumb's own ellipsis in charge. */
+  .app-header__step-nav-wrapper {
+    min-width: 0;
+  }
+}

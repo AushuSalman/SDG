@@ -11,7 +11,7 @@ export const ROLES = [
 ] as const
 export type Role = (typeof ROLES)[number]
 
-export const BUSINESSES = ['construction', 'paper', 'glass', 'group'] as const
+export const BUSINESSES = ['construction', 'paper', 'glass', 'agro', 'group'] as const
 export type Business = (typeof BUSINESSES)[number]
 
 type StaffUser = { role?: Role | null; business?: Business | null } | null | undefined

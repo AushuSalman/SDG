@@ -8,7 +8,7 @@ import { BookVisitButton } from '../ui/actions'
 
 export type PdProject = {
   slug: string; name: string; location: string; address?: string | null; category: 'residential' | 'commercial'; status: 'ongoing' | 'completed' | 'upcoming'
-  img: string; summary: string; size: string; price: string | null; minCr?: number | null; maxCr?: number | null; possession: string; rera: string
+  img: string; summary: string; size: string; price: string | null; minCr?: number | null; maxCr?: number | null; possession: string; rera: string; featured?: boolean
 }
 
 const BUDGETS: [string, string][] = [['any', 'Any budget'], ['u1', 'Under ₹1 Cr'], ['1-2', '₹1 – 2 Cr'], ['2-3.5', '₹2 – 3.5 Cr'], ['3.5+', 'Above ₹3.5 Cr']]
@@ -27,6 +27,7 @@ export function ProjectsDiscovery({ projects }: { projects: PdProject[] }) {
       (st.budget === 'any' || (p.minCr != null && p.maxCr != null && p.maxCr >= RANGE[st.budget][0] && p.minCr <= RANGE[st.budget][1])))
     if (st.sort === 'price') l = l.slice().sort((a, b) => (a.minCr ?? 99) - (b.minCr ?? 99))
     if (st.sort === 'poss') l = l.slice().sort((a, b) => ORDER[a.status] - ORDER[b.status])
+    if (st.sort === 'featured') l = l.slice().sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)))
     return l
   }, [projects, st])
   const sel = list[Math.min(pin, Math.max(0, list.length - 1))]

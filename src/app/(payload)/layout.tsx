@@ -8,6 +8,8 @@ import React from 'react'
 
 import { importMap } from './admin/importMap.js'
 import './custom.scss'
+// TailAdmin (Tailwind) for the admin shell only; the public site has its own stylesheet in (frontend).
+import './tailadmin.css'
 
 type Args = {
   children: React.ReactNode

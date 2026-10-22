@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 
 import { useUi } from '../ui/UiProvider'
 
-export type GalleryImage = { src: string; alt: string }
+export type GalleryImage = { src: string; alt: string; credit?: string | null }
 
 const youtubeId = (url?: string | null): string | null => {
   if (!url) return null
@@ -55,7 +55,7 @@ export function ProjectGallery({ images, videoUrl, name }: { images: GalleryImag
           ))}
         </div>
       )}
-      {cur?.alt && <p className="gal-cap">{cur.alt}</p>}
+      {cur?.alt && <p className="gal-cap">{cur.alt}{cur.credit ? ` · Photo: ${cur.credit}` : ''}</p>}
     </div>
   )
 }

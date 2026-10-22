@@ -3,13 +3,23 @@ import Link from 'next/link'
 import React from 'react'
 
 import { AskAiButton } from './ui/actions'
-import { PwaButtons } from './ui/PwaButtons'
 
-type Settings = { groupName?: string | null; phone?: string | null; email?: string | null; headOffice?: string | null; hoursText?: string | null }
+type Settings = {
+  groupName?: string | null
+  promise?: string | null
+  phone?: string | null
+  email?: string | null
+  headOffice?: string | null
+  hoursText?: string | null
+  social?: { label: string; url: string; id?: string | null }[] | null
+}
 
 const GROUP: [string, string][] = [
-  ['/', 'Home'], ['/about', 'About'], ['/leadership', 'Leadership'], ['/partnerships', 'Partnerships'], ['/careers', 'Careers'],
-  ['/real-estate', 'Construction'], ['/paper', 'Paper Manufacturing'], ['/glass', 'Glass Recycling'], ['/portal', 'Client portal'], ['/contact', 'Contact'],
+  ['/', 'Home'], ['/about', 'About us'], ['/about#legacy', 'Legacy'], ['/leadership', 'Leadership'], ['/about#csr', 'CSR'], ['/partnerships', 'Partnerships'], ['/careers', 'Careers'],
+  ['/blog', 'News & Events'], ['/portal', 'Client portal'], ['/contact', 'Contact'],
+]
+const VERTICALS: [string, string][] = [
+  ['/real-estate', 'Suvarna Durga Constructions'], ['/paper', 'Suvarna Durga Paper'], ['/glass', 'Suvarna Durga Bottles'],
 ]
 const EXPLORE_A: [string, string][] = [['/projects', 'Project experience'], ['/proposal', 'Space designer']]
 const EXPLORE_B: [string, string][] = [
@@ -25,11 +35,19 @@ export function SiteFooter({ settings }: { settings: Settings }) {
           <div>
             <Image src="/img/sdg-logo.webp" alt="SDG · Suvarna Durga Group" width={350} height={128} className="flogo" />
             <div className="fsub">Since 1978</div>
-            <p className="fcontact">Hyderabad, Telangana<br />{settings.email}<br />{settings.phone}</p>
-            <PwaButtons />
+            {settings.promise && <p className="fpromise">{settings.promise}</p>}
+            <p className="fcontact" style={{ whiteSpace: 'pre-line' }}>{settings.headOffice || 'Hyderabad, Telangana'}<br />{settings.email}<br />{settings.phone}</p>
+            {settings.social && settings.social.length > 0 && (
+              <p className="fsocial">
+                {settings.social.map((s) => <a key={s.id || s.url} href={s.url} target="_blank" rel="noreferrer">{s.label}</a>)}
+              </p>
+            )}
+            {/* PWA install and launch-alert buttons (SOW Layer 01) return here once the manifest, service worker and push pipeline are built; see src/components/ui/PwaButtons.tsx. */}
           </div>
           <div>
-            <h4>Group</h4>
+            <h4>Verticals</h4>
+            {VERTICALS.map(([href, label]) => <Link key={href + label} href={href}>{label}</Link>)}
+            <h4 style={{ marginTop: 22 }}>Group</h4>
             {GROUP.map(([href, label]) => <Link key={href + label} href={href}>{label}</Link>)}
           </div>
           <div>

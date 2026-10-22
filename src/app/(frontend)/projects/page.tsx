@@ -12,7 +12,7 @@ export default async function ProjectsPage() {
   const data = projects.map((p) => {
     const cfgs = (p.configurations || []).map((c) => c.label)
     return {
-      slug: p.slug, name: p.name, location: p.location, address: p.address, category: p.category, status: p.status, img: projectImage(p, 'card'),
+      slug: p.slug, name: p.name, location: p.location, address: p.address, category: p.category, status: p.status, img: projectImage(p, 'card'), featured: Boolean(p.featured),
       summary: p.tagline || p.summary || '', size: cfgs.length ? [...new Set(cfgs)].join(', ') : p.specs?.floorPlate ? `Floor plates ${p.specs.floorPlate}` : p.specs?.saleableArea || '—',
       price: priceBand(p), minCr: p.pricing?.from ? p.pricing.from / 100 : null, maxCr: p.pricing?.to ? p.pricing.to / 100 : null,
       possession: p.possession || (p.status === 'completed' ? 'Handed over' : 'As per RERA filing'), rera: p.rera || 'On registration',

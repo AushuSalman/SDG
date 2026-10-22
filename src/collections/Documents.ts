@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { canEditContent, canPublish } from '@/lib/access'
+import { runQueueSoon } from '@/lib/queue'
 
 /**
  * Approved documents are the only thing the AI assistant may answer from (questionnaire Q52).
@@ -8,10 +9,13 @@ import { canEditContent, canPublish } from '@/lib/access'
  */
 export const Documents: CollectionConfig = {
   slug: 'documents',
+  labels: { singular: 'Knowledge document', plural: 'Knowledge documents' },
   admin: {
     useAsTitle: 'title',
-    group: 'Content',
+    group: 'AI knowledge',
+    description: 'Brochures, specifications and policies the AI assistant may quote. A document is only used after a manager ticks Approved.',
     defaultColumns: ['title', 'kind', 'business', 'approved', 'indexStatus', 'chunkCount'],
+    listSearchableFields: ['title', 'filename'],
   },
   access: {
     read: ({ req }) => (req.user ? true : { approved: { equals: true } }),
@@ -53,6 +57,7 @@ export const Documents: CollectionConfig = {
             task: 'indexDocument',
             input: { documentId: String(doc.id) },
           })
+          runQueueSoon(req.payload)
         }
         return doc
       },
@@ -64,6 +69,7 @@ export const Documents: CollectionConfig = {
       {
         name: 'kind',
         type: 'select',
+        label: 'Document type',
         required: true,
         options: [
           { label: 'Project brochure', value: 'brochure' },
@@ -79,13 +85,14 @@ export const Documents: CollectionConfig = {
         name: 'business',
         type: 'select',
         defaultValue: 'group',
-        options: ['group', 'construction', 'paper', 'glass'],
+        options: ['group', 'construction', 'paper', 'glass', 'agro'],
       },
       { name: 'project', type: 'relationship', relationTo: 'projects' },
     ] },
     {
       name: 'extractedText',
       type: 'textarea',
+      label: 'Text the assistant reads',
       admin: {
         description:
           'The text the assistant reads. Paste the brochure text here. PDF text extraction is a later step.',
@@ -99,12 +106,13 @@ export const Documents: CollectionConfig = {
     {
       name: 'indexStatus',
       type: 'select',
+      label: 'AI index status',
       defaultValue: 'not-approved',
       admin: { position: 'sidebar', readOnly: true },
       options: ['not-approved', 'pending', 'indexed', 'failed'],
     },
-    { name: 'chunkCount', type: 'number', admin: { position: 'sidebar', readOnly: true } },
-    { name: 'indexError', type: 'text', admin: { readOnly: true } },
+    { name: 'chunkCount', type: 'number', label: 'Indexed chunks', admin: { position: 'sidebar', readOnly: true } },
+    { name: 'indexError', type: 'text', label: 'Index error', admin: { readOnly: true } },
   ],
 }
 

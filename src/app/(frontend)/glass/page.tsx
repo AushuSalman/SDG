@@ -2,14 +2,17 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import React from 'react'
 
+import { ClientLogos } from '@/components/ClientLogos'
 import { EnquiryForm } from '@/components/EnquiryForm'
+import { FaqSection } from '@/components/FaqSection'
+import { PhotoGrid } from '@/components/PhotoGrid'
 import { SectionBar } from '@/components/SectionBar'
 import { BookVisitButton, ScrollLink } from '@/components/ui/actions'
 import { GL_STEP_ICONS } from '@/components/ui/icons'
-import { getFacts } from '@/lib/content'
+import { getFacts, getFaqs, getPartners, getSiteCopy, mediaList, mediaUrl } from '@/lib/content'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Glass Recycling', description: 'Suvarna Durga Bottles: recovery, sorting, washing and supply of returnable glass bottles through a warehouse network across Telangana and Andhra Pradesh.' }
+export const metadata: Metadata = { title: 'Suvarna Durga Bottles', description: 'Suvarna Durga Bottles: premium glass bottle recycling through a network of warehouses across Telangana and Andhra Pradesh, with a pilot automated washing plant.' }
 
 const STEPS = [
   ['Recovery', 'Empties collected from distributors, hotels and retail returns.'],
@@ -33,12 +36,20 @@ const WHY = [
 ]
 
 export default async function GlassPage() {
-  const facts = await getFacts({ category: 'Bottle Recycling' })
+  const [facts, faqs, copy, clients] = await Promise.all([getFacts({ category: 'Bottle Recycling' }), getFaqs({ business: 'glass', generalOnly: true }), getSiteCopy(), getPartners({ kind: 'client', business: 'glass' })])
+  const fact = (re: RegExp) => facts.find((f) => re.test(f.claim))
+  const team = fact(/full-time/i)
+  const youth = fact(/youth/i)
+  const warehouses = fact(/^warehouses/i)
+  const points = [team && youth && `Strength: ${team.value} full-time, ${youth.value} self-employed youth`, warehouses && `${warehouses.value} warehouses in Telangana and Andhra Pradesh`].filter(Boolean) as string[]
+  const numbers = facts.filter((f) => f.value).slice(0, 4)
+  const map = mediaUrl(copy.warehouseMap, 'wide')
+  const plant = mediaList(copy.glassGallery)
   return (
     <div id="gx-top">
       <SectionBar
-        sub="Glass Recycling" variant="centre" label="Glass Recycling"
-        links={[{ to: 'gx-top', label: 'About' }, { to: 'glassprocess', label: 'Our Process' }, { to: 'glassrange', label: 'Applications' }, { to: 'site-foot', label: 'Contact' }]}
+        sub="Glass Bottles" variant="centre" label="Glass Bottles"
+        links={[{ to: 'gx-top', label: 'About' }, { to: 'glassprocess', label: 'Our Process' }, { to: 'glassrange', label: 'Applications' }, { to: 'glassnetwork', label: 'Network' }, { to: 'site-foot', label: 'Contact' }]}
         cta={<ScrollLink to="enquire" focus="eq-quantity" className="btn sm sentence">Enquire</ScrollLink>}
       />
 
@@ -46,7 +57,8 @@ export default async function GlassPage() {
         <Image className="gl-hero-img" src="/img/glass-hero-mock.webp" alt="Clear recovered glass on the sorting line" width={1600} height={1000} priority />
         <div className="gl-hero-copy">
           <h1>A new life<br /><em>for glass.</em></h1>
-          <p>Recovering valuable materials.<br />Supporting a circular future.</p>
+          <p>{copy.glassIntro || 'Recovering valuable materials. Supporting a circular future.'}</p>
+          {points.length > 0 && <ul className="gl-points">{points.map((p) => <li key={p}>{p}</li>)}</ul>}
           <div className="gl-cta">
             <ScrollLink to="enquire" focus="eq-quantity" className="btn">Discuss Your Requirements</ScrollLink>
             <ScrollLink to="glassprocess" className="btn ghost">Explore Our Process</ScrollLink>
@@ -81,8 +93,28 @@ export default async function GlassPage() {
           <div className="gl-grid">
             {FAMILIES.map(([b, s, e]) => <div key={b}><b>{b}</b><span>{s}</span><em>{e}</em></div>)}
           </div>
+          <ClientLogos clients={clients} kickClass="gl-kick" title="Clients" />
         </div>
       </section>
+
+      {(map || copy.glassWarehouses) && (
+        <section className="gl-network" id="glassnetwork">
+          <div className="wrap">
+            <div className="grid g2" style={{ alignItems: 'center' }}>
+              <div>
+                <p className="gl-kick">Warehouse locations</p>
+                <h2>A network across two states.</h2>
+                <span className="gl-rule" style={{ marginInline: 0 }} />
+                {copy.glassWarehouses && <p className="lede" style={{ fontSize: 16 }}>{copy.glassWarehouses}</p>}
+              </div>
+              {map && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="gl-map" src={map} alt="Map of Suvarna Durga Bottles warehouses across Telangana and Andhra Pradesh" loading="lazy" />
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="gl-why">
         <div className="wrap">
@@ -91,13 +123,30 @@ export default async function GlassPage() {
           <div className="gl-why-grid">
             {WHY.map(([b, s]) => <div key={b}><b>{b}</b><span>{s}</span></div>)}
           </div>
-          {facts.length > 0 && (
-            <div className="spec-grid" style={{ marginTop: 48 }}>
-              {facts.filter((f) => f.value).slice(0, 4).map((f) => <div key={f.id}><b style={{ fontFamily: 'var(--display)', fontWeight: 500, fontSize: 34, letterSpacing: '-.02em', color: 'var(--gl)' }}>{f.value}</b><span>{f.wording}</span></div>)}
+          {numbers.length > 0 && (
+            <div className="spec-grid gl-numbers" style={{ marginTop: 48 }}>
+              {numbers.map((f) => <div key={f.id}><b className="big">{f.value}</b><span>{f.wording}</span></div>)}
             </div>
           )}
         </div>
       </section>
+
+      {(copy.glassPilot || plant.length > 0) && (
+        <section className="gl-pilot">
+          <div className="wrap">
+            <p className="gl-kick">Pilot project</p>
+            <h2>Automated plant.</h2>
+            {copy.glassPilot && <p className="gl-sub" style={{ maxWidth: '64ch', marginInline: 'auto' }}>{copy.glassPilot}</p>}
+            <PhotoGrid photos={plant} columns={4} />
+          </div>
+        </section>
+      )}
+
+      {faqs.length > 0 && (
+        <section className="gl-faq">
+          <div className="wrap"><FaqSection faqs={faqs} kickClass="gl-kick" title="Questions about returnables." /></div>
+        </section>
+      )}
 
       <section className="gl-enq">
         <div className="wrap">

@@ -1,21 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { captureSource, post } from '@/lib/client/enquiry'
 
 import { useUi } from './ui/UiProvider'
 
-export type Desk = { id: string; business: 'construction' | 'paper' | 'glass'; title: string; name: string; role: string; modes: string[]; type: string }
+export type Desk = { id: string; business: 'construction' | 'paper' | 'glass'; title: string; name: string; role: string; modes: string[]; type: string; slots: string[] }
 
-const SLOTS = ['09:30', '10:30', '11:30', '12:30', '14:00', '15:00', '16:00', '17:00']
 const days = (): Date[] => { const out: Date[] = []; const d = new Date(); d.setHours(12, 0, 0, 0); while (out.length < 6) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) out.push(new Date(d)) } return out }
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const EMPTY = new Set<string>()
 const stamp = (x: Date) => { const p = (n: number) => String(n).padStart(2, '0'); return `${x.getFullYear()}${p(x.getMonth() + 1)}${p(x.getDate())}T${p(x.getHours())}${p(x.getMinutes())}00` }
 
 /** Meeting scheduler: pick the desk, how to meet and a slot, then confirm by OTP. Calendar invites follow. */
-export function Scheduler({ desks, preselect, hoursText }: { desks: Desk[]; preselect?: string; hoursText: string }) {
+export function Scheduler({ desks, preselect, hoursText, slots: defaultSlots }: { desks: Desk[]; preselect?: string; hoursText: string; slots: string[] }) {
   const ui = useUi()
   const [desk, setDesk] = useState<Desk | null>(desks.find((d) => d.id === preselect || d.business === preselect) || null)
   const [mode, setMode] = useState<string | null>(null)
@@ -28,12 +28,30 @@ export function Scheduler({ desks, preselect, hoursText }: { desks: Desk[]; pres
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const D = useMemo(() => days(), [])
+  // The chosen consultant's own hours, else the group's consultation hours from Site settings.
+  const slots = desk?.slots.length ? desk.slots : defaultSlots
+  // Slots already taken on the consultant's connected Outlook calendar ("YYYY-MM-DD HH:MM"), kept with the desk
+  // they were fetched for so switching desks never shows the previous desk's bookings.
+  const [fetched, setFetched] = useState<{ deskId: string; slots: Set<string> } | null>(null)
+  useEffect(() => {
+    if (!desk) return
+    let live = true
+    fetch(`/api/site/calendar/busy?consultant=${encodeURIComponent(desk.id)}&from=${iso(D[0])}&to=${iso(D[D.length - 1])}`)
+      .then((r) => r.json())
+      .then((j: { busy?: string[] }) => { if (live) setFetched({ deskId: desk.id, slots: new Set(j.busy || []) }) })
+      .catch(() => {})
+    return () => { live = false }
+  }, [desk, D])
+  const taken = fetched && desk && fetched.deskId === desk.id ? fetched.slots : EMPTY
   const source = useMemo(() => captureSource(), [])
   const fmt = (d: Date) => d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
 
   const booking = desk && slot && mode ? { date: iso(D[slot.di]), time: slot.s, mode, desk } : null
   const summary = booking ? `Call requested: ${fmt(D[slot!.di])} at ${booking.time} IST · ${booking.mode} · ${booking.desk.name}${f.note ? ` · ${f.note}` : ''}` : ''
-  const body = () => ({ phone: f.phone, name: f.name, email: f.email || undefined, business: desk!.business, type: desk!.type, timeline: '0-3m', message: summary, consent: true, source })
+  const body = () => ({
+    phone: f.phone, name: f.name, email: f.email || undefined, business: desk!.business, type: desk!.type, timeline: '0-3m', message: summary, consent: true, source,
+    meeting: booking ? { date: booking.date, time: booking.time, mode: booking.mode, consultantId: booking.desk.id } : undefined,
+  })
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,9 +110,12 @@ export function Scheduler({ desks, preselect, hoursText }: { desks: Desk[]; pres
           <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: 0 }}>{hoursText}. Your consultant confirms the slot against their calendar.</p>
           <div className="wk-wrap"><div className="wk">
             {D.map((d) => <div className="dh" key={iso(d)}>{d.toLocaleDateString('en-IN', { weekday: 'short' })}<b>{d.getDate()} {d.toLocaleDateString('en-IN', { month: 'short' })}</b></div>)}
-            {SLOTS.map((s) => D.map((d, di) => <button key={s + di} type="button" aria-pressed={slot?.di === di && slot?.s === s} onClick={() => { setSlot({ di, s }); if (!mode) ui.toast('Choose how you would like to meet (step 3) to continue') }}>{s}</button>))}
+            {slots.map((s) => D.map((d, di) => {
+              const busySlot = taken.has(`${iso(d)} ${s}`)
+              return <button key={s + di} type="button" disabled={busySlot} title={busySlot ? 'Already booked' : undefined} aria-pressed={slot?.di === di && slot?.s === s} onClick={() => { setSlot({ di, s }); if (!mode) ui.toast('Choose how you would like to meet (step 3) to continue') }}>{busySlot ? 'Booked' : s}</button>
+            }))}
           </div></div>
-          <p className="wk-hint">Swipe sideways for more days →</p>
+          <p className="wk-hint">Swipe sideways for more days →{taken.size > 0 ? ' · Greyed slots are already booked on the consultant\'s calendar.' : ''}</p>
         </>
       )}
       {booking && step === 'form' && (

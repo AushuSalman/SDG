@@ -1,8 +1,11 @@
 import type { Payload } from 'payload'
 
+import { runQueueSoon } from '@/lib/queue'
+
 import { draftAnswer } from './answer'
 import { estimateTokens, type ChatTurn } from './bedrock'
 import { classify } from './classify'
+import { retrieveFaqs } from './faqs'
 import { postCheck } from './postcheck'
 import { retrieveChunks } from './retrieve'
 
@@ -74,7 +77,11 @@ export async function runChat(payload: Payload, req: ChatRequest): Promise<ChatR
   let model = 'rules'
   let flags: string[] = []
 
-  if (cls.restricted) {
+  // Published FAQs are the quickest approved source; a restricted FAQ match means "a consultant answers this".
+  const faqs = req.documentId ? [] : await retrieveFaqs(payload, { query: req.message, business, projectId: project?.id })
+  const restrictedFaq = !cls.restricted && faqs[0]?.restricted ? faqs[0] : undefined
+
+  if (cls.restricted || restrictedFaq) {
     const facts: string[] = []
     // Approved indicative information may be shared (Q20): the structured range from the project record.
     if (project?.pricing?.from && project.pricing.to && cls.category === 'pricing') {
@@ -83,15 +90,17 @@ export async function runChat(payload: Payload, req: ChatRequest): Promise<ChatR
     response = {
       kind: 'handoff',
       text: ai.handoffMessage || 'An SDG consultant will confirm that directly. I can arrange a call or a site visit now.',
-      category: cls.category,
+      category: cls.category || (restrictedFaq ? 'restricted-faq' : undefined),
       sources: [],
       facts,
       language: cls.language,
     }
   } else {
-    const chunks = req.documentId
+    const faqChunks = faqs.filter((f) => !f.restricted).map((f) => ({ text: f.answer, title: `FAQ: ${f.question}`, documentId: `faq:${f.id}`, score: f.score + 0.5 }))
+    const docChunks = req.documentId
       ? await documentChunks(payload, req.documentId)
       : await retrieveChunks(payload, { query: req.message, business, projectId: project?.id })
+    const chunks = [...faqChunks, ...docChunks].sort((a, b) => b.score - a.score).slice(0, 6)
     const draft = await draftAnswer({ question: req.message, history: req.history || [], chunks, language: cls.language })
     const checked = postCheck(draft.text)
     model = draft.model
@@ -107,21 +116,22 @@ export async function runChat(payload: Payload, req: ChatRequest): Promise<ChatR
   const usage = await recordUsage(payload, tokens, ai.monthlyTokenCap || 0)
   if (usage.overCap) {
     await payload.jobs.queue({ task: 'emailSend', input: { to: process.env.ALERT_EMAIL || settings.email || '', subject: 'SDG assistant: monthly token cap reached', text: `Tokens this month: ${usage.total}. Cap: ${ai.monthlyTokenCap}.` } })
+    runQueueSoon(payload)
   }
 
   const newMessages = [
-    { role: 'user' as const, content: req.message, restricted: cls.restricted, category: cls.category, model: 'rules' },
+    { role: 'user' as const, content: req.message, restricted: cls.restricted || Boolean(restrictedFaq), category: response.category, model: 'rules' },
     {
       role: 'assistant' as const,
       content: response.text,
-      restricted: cls.restricted,
-      category: cls.category,
+      restricted: cls.restricted || Boolean(restrictedFaq),
+      category: response.category,
       model,
       sources: response.sources,
       flags: flags.map((flag) => ({ flag })),
     },
   ]
-  const handoffNow = cls.restricted || cls.intent === 'contact' || cls.intent === 'visit'
+  const handoffNow = cls.restricted || Boolean(restrictedFaq) || cls.intent === 'contact' || cls.intent === 'visit'
   if (log) {
     await payload.update({
       collection: 'chat-logs',
@@ -130,13 +140,14 @@ export async function runChat(payload: Payload, req: ChatRequest): Promise<ChatR
       data: {
         messages: [...(log.messages || []), ...newMessages],
         handoff: log.handoff || handoffNow,
-        handoffReason: log.handoffReason || (handoffNow ? cls.category || cls.intent : undefined),
+        handoffReason: log.handoffReason || (handoffNow ? response.category || cls.intent : undefined),
         business: business || log.business,
         language: cls.language,
       },
     })
     if (handoffNow && !log.consultantNotified) {
       await payload.jobs.queue({ task: 'notifyConsultant', input: { chatLogId: String(log.id) } })
+      runQueueSoon(payload)
     }
   } else {
     const created = await payload.create({
@@ -149,10 +160,13 @@ export async function runChat(payload: Payload, req: ChatRequest): Promise<ChatR
         language: cls.language,
         messages: newMessages,
         handoff: handoffNow,
-        handoffReason: handoffNow ? cls.category || cls.intent : undefined,
+        handoffReason: handoffNow ? response.category || cls.intent : undefined,
       },
     })
-    if (handoffNow) await payload.jobs.queue({ task: 'notifyConsultant', input: { chatLogId: String(created.id) } })
+    if (handoffNow) {
+      await payload.jobs.queue({ task: 'notifyConsultant', input: { chatLogId: String(created.id) } })
+      runQueueSoon(payload)
+    }
   }
 
   return response

@@ -5,10 +5,13 @@ import { canEditContent, canPublish } from '@/lib/access'
 /** Social proof. Only approved quotes reach the site; approval needs Management or Super Admin, like Facts. */
 export const Testimonials: CollectionConfig = {
   slug: 'testimonials',
+  labels: { singular: 'Testimonial', plural: 'Testimonials' },
   admin: {
     useAsTitle: 'name',
-    group: 'Content',
+    group: 'Website',
+    description: 'Customer quotes shown on the site. Visitors only see the approved ones.',
     defaultColumns: ['name', 'business', 'approved', 'sample'],
+    listSearchableFields: ['name', 'quote'],
   },
   access: {
     read: ({ req }) => (req.user ? true : { approved: { equals: true } }),
@@ -30,7 +33,7 @@ export const Testimonials: CollectionConfig = {
     { name: 'quote', type: 'textarea', required: true },
     { type: 'row', fields: [
       { name: 'name', type: 'text', required: true, admin: { description: 'e.g. Resident, or a name with permission' } },
-      { name: 'role', type: 'text', admin: { description: 'e.g. Centrum occupier, 2024' } },
+      { name: 'role', type: 'text', label: 'Role or context', admin: { description: 'e.g. Centrum occupier, 2024' } },
       { name: 'business', type: 'select', defaultValue: 'construction', options: ['group', 'construction', 'paper', 'glass'] },
     ] },
     { type: 'row', fields: [

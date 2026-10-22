@@ -5,10 +5,13 @@ import { restrictPublish } from './Projects'
 
 export const Faqs: CollectionConfig = {
   slug: 'faqs',
+  labels: { singular: 'FAQ', plural: 'FAQs' },
   admin: {
     useAsTitle: 'question',
-    group: 'Content',
+    group: 'Website',
+    description: 'With a project, an FAQ appears on that project page; without one it appears on its business page (Contact for Group). The AI assistant quotes them too. Tick Restricted for price, availability, RERA, legal or loans: the assistant hands those off.',
     defaultColumns: ['question', 'business', 'project', '_status'],
+    listSearchableFields: ['question', 'answer'],
   },
   versions: { drafts: true },
   access: {

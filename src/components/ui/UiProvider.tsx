@@ -20,6 +20,8 @@ type Ui = {
   projects: ProjectOption[]
   hoursText: string
   whatsapp: string
+  /** Bookable times, from Site settings → Consultation hours */
+  visitSlots: string[]
 }
 
 const UiContext = createContext<Ui | null>(null)
@@ -29,7 +31,7 @@ export const useUi = () => {
   return ctx
 }
 
-export function UiProvider({ children, projects, hoursText, whatsapp }: { children: React.ReactNode; projects: ProjectOption[]; hoursText: string; whatsapp: string }) {
+export function UiProvider({ children, projects, hoursText, whatsapp, visitSlots }: { children: React.ReactNode; projects: ProjectOption[]; hoursText: string; whatsapp: string; visitSlots: string[] }) {
   const [toastMsg, setToastMsg] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [ai, setAi] = useState<{ open: boolean; question?: string; key: number }>({ open: false, key: 0 })
@@ -56,7 +58,7 @@ export function UiProvider({ children, projects, hoursText, whatsapp }: { childr
     return () => document.removeEventListener('keydown', esc)
   }, [lightbox])
 
-  const value = useMemo<Ui>(() => ({ toast, openAI, openBooking, openShare, openBrochure, openLightbox, aiOpen: ai.open, projects, hoursText, whatsapp }), [toast, openAI, openBooking, openShare, openBrochure, openLightbox, ai.open, projects, hoursText, whatsapp])
+  const value = useMemo<Ui>(() => ({ toast, openAI, openBooking, openShare, openBrochure, openLightbox, aiOpen: ai.open, projects, hoursText, whatsapp, visitSlots }), [toast, openAI, openBooking, openShare, openBrochure, openLightbox, ai.open, projects, hoursText, whatsapp, visitSlots])
 
   return (
     <UiContext.Provider value={value}>

@@ -3,14 +3,17 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
+import { ClientLogos } from '@/components/ClientLogos'
 import { EnquiryForm } from '@/components/EnquiryForm'
+import { FaqSection } from '@/components/FaqSection'
+import { PhotoGrid } from '@/components/PhotoGrid'
 import { SectionBar } from '@/components/SectionBar'
 import { BookVisitButton, ScrollLink } from '@/components/ui/actions'
 import { PP_FLOW_ICONS, PP_OPT_ICONS, PP_STEP_ICONS, PP_TRADE_ICONS } from '@/components/ui/icons'
-import { getFacts } from '@/lib/content'
+import { getFacts, getFaqs, getPartners, getSiteCopy, mediaList } from '@/lib/content'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Paper Manufacturing', description: 'Machine-finished kraft paper from Sangareddy for converters and trade buyers across South India: 100 to 250 GSM, 18 to 28 BF.' }
+export const metadata: Metadata = { title: 'Suvarna Durga Paper', description: 'Machine-finished kraft paper for the packaging industry from Suvarna Durga Paper, Sangareddy: 100 to 250 GSM, 18 to 28 BF, two paper machines, 175,000 tonnes a year.' }
 
 const STEPS = [
   ['Fibre Intake', 'Recovered paper and virgin pulp received and graded.'],
@@ -27,12 +30,6 @@ const RANGE = [
   ['/img/pp-tags.webp', 'Headers & Tags', 'Printed packaging headers and swing tags'],
   ['/img/pp-boxes.webp', 'Packaging Solutions', 'Kraft boxes and envelopes'],
 ]
-const GRADES = [
-  ['Kraft paper', 'Machine-finished kraft in natural and golden shades for corrugated board and general packaging.', '100 – 250 GSM'],
-  ['Burst factor', 'Strength to the specification your converting line needs.', '18 – 28 BF'],
-  ['Certified', 'FSC and RoHS certified manufacturing on two paper machines.', 'FSC · RoHS'],
-  ['Markets', 'Telangana, Andhra Pradesh, Tamil Nadu, Karnataka and Maharashtra.', 'Five states'],
-]
 const OPTS = ['Sizes & Shapes', 'Brand Printing', 'Material Options', 'Finishes & Details']
 const FLOW = [
   ['Share Specifications', 'Tell us your GSM, BF and quantity.'],
@@ -47,11 +44,26 @@ const TRADE = [
 ]
 
 export default async function PaperPage() {
-  const facts = await getFacts({ category: 'Paper' })
-  const gsm = facts.find((f) => /grammage/i.test(f.claim))?.value || '100–250 GSM'
-  const bf = facts.find((f) => /burst/i.test(f.claim))?.value || '18–28 BF'
+  const [facts, faqs, copy, clients] = await Promise.all([getFacts({ category: 'Paper' }), getFaqs({ business: 'paper', generalOnly: true }), getSiteCopy(), getPartners({ kind: 'client', business: 'paper' })])
+  const fact = (re: RegExp) => facts.find((f) => re.test(f.claim))
+  const gsm = fact(/grammage/i)?.value || '100–250 GSM'
+  const bf = fact(/burst/i)?.value || '18–28 BF'
   const [gsmNum, gsmUnit] = gsm.split(' ')
   const [bfNum, bfUnit] = bf.split(' ')
+  const team = fact(/team/i)
+  const machines = fact(/machines/i)
+  const capacity = fact(/capacity/i)
+  const cap = capacity?.value || ''
+  const growth = facts.filter((f) => /revenue|growth rate/i.test(f.claim) && f.value)
+  const markets = fact(/markets/i)
+  const strengths = [team && `Team strength of ${team.value} professionals`, machines && `${machines.value} paper machines of distinctive advantage`, capacity && `${capacity.value} capacity, up from 20 TPD`].filter(Boolean) as string[]
+  const plant = mediaList(copy.paperGallery)
+  const GRADES = [
+    ['Kraft paper', 'Machine-finished kraft in natural and golden shades for corrugated board and general packaging.', gsm],
+    ['Burst factor', 'Strength to the specification your converting line needs.', bf],
+    ['Certified', `FSC and RoHS certified manufacturing on ${machines?.value || 'two'} paper machines.`, 'FSC · RoHS'],
+    ['Markets', markets?.wording.replace(/^The paper business supplies packaging-industry customers across /, '') || 'Telangana, Andhra Pradesh, Tamil Nadu, Karnataka and Maharashtra.', 'Five states'],
+  ]
   return (
     <div id="pp-top">
       <SectionBar
@@ -64,11 +76,12 @@ export default async function PaperPage() {
         <div className="vtop-grid">
           <div className="vtop-copy">
             <p className="vtop-kicker">02 / Make</p>
-            <h1>Paper for<br /><em>every purpose.</em></h1>
-            <p className="vtop-sub">From everyday paper needs to recyclable covers, packaging headers and customised solutions. Explore sizes, styles and finishes suited to your business.</p>
+            <h1>Kraft paper for<br /><em>the packaging trade.</em></h1>
+            <p className="vtop-sub">{copy.paperIntro || 'Machine-finished kraft paper for the packaging industry throughout Telangana and Andhra Pradesh.'}</p>
+            {strengths.length > 0 && <ul className="vtop-points">{strengths.map((s) => <li key={s}>{s}</li>)}</ul>}
             <div className="vtop-links">
               <ScrollLink to="paperrange">Explore Our Range <i>→</i></ScrollLink>
-              <ScrollLink to="enquire" focus="eq-quantity">Request Customisation <i>→</i></ScrollLink>
+              <ScrollLink to="enquire" focus="eq-quantity">Request a Quotation <i>→</i></ScrollLink>
             </div>
           </div>
           <div className="vtop-art photo"><Image src="/img/paper-hero.webp" alt="SDG paper sheets, kraft covers, tags and boxes" width={1200} height={800} priority /></div>
@@ -100,10 +113,22 @@ export default async function PaperPage() {
           <div className="pp-stats">
             <div><b>{gsmNum} <small>{gsmUnit}</small></b><span>Paper weight</span></div>
             <div><b>{bfNum} <small>{bfUnit}</small></b><span>Strength range</span></div>
+            {cap && <div><b>{cap.split(' ')[0]} <small>{cap.split(' ').slice(1).join(' ')}</small></b><span>Capacity</span></div>}
           </div>
           <p className="pp-note">Published product range. Confirm availability when enquiring.</p>
         </div>
       </section>
+
+      {growth.length > 0 && (
+        <section className="pp-growth">
+          <div className="wrap">
+            <p className="process-kick">Growth</p>
+            <div className="spec-grid" style={{ marginTop: 24 }}>
+              {growth.map((f) => <div key={f.id}><b className="big">{f.value}</b><span>{f.wording}</span></div>)}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="pp-range" id="paperrange">
         <div className="wrap">
@@ -153,8 +178,21 @@ export default async function PaperPage() {
           <div className="pp-trade-grid">
             {TRADE.map(([h, p], i) => { const Icon = PP_TRADE_ICONS[i]; return <article key={h}><span className="pp-tico"><Icon /></span><h3>{h}</h3><p>{p}</p></article> })}
           </div>
+          <ClientLogos clients={clients} kickClass="process-kick" title="Clients" />
         </div>
       </section>
+
+      {plant.length > 0 && (
+        <section className="pp-plant">
+          <div className="wrap"><PhotoGrid photos={plant} kicker="Plant & equipment" title="Inside Suvarna Durga Paper Mills." kickClass="process-kick" columns={4} /></div>
+        </section>
+      )}
+
+      {faqs.length > 0 && (
+        <section className="pp-faq">
+          <div className="wrap"><FaqSection faqs={faqs} title="Paper trade questions, answered." /></div>
+        </section>
+      )}
 
       <section className="pp-band on-dark">
         <div className="wrap">

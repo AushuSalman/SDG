@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 
-import { VISIT_SLOTS, visitCheck, visitDay } from '@/lib/client/enquiry'
+import { visitCheck, visitDay } from '@/lib/client/enquiry'
 
 import { useUi } from '../ui/UiProvider'
 
@@ -33,7 +33,7 @@ export function VisitBandForm() {
       <label className="re-field"><span className="sr">Preferred time</span>
         <select id="vbtime" value={v.time} aria-invalid={bad === 'time' || undefined} onChange={(e) => { setV({ ...v, time: e.target.value }); setErr('') }}>
           <option value="">Select time</option>
-          {VISIT_SLOTS.map((s) => <option key={s}>{s}</option>)}
+          {ui.visitSlots.map((s) => <option key={s}>{s}</option>)}
         </select>
       </label>
       <button className="btn accent" type="submit">Book a Site Visit <i aria-hidden>→</i></button>

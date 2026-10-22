@@ -68,17 +68,19 @@ export interface Config {
   blocks: {};
   collections: {
     projects: Project;
-    facts: Fact;
-    faqs: Faq;
-    documents: Document;
-    media: Media;
     posts: Post;
     jobs: Job;
     testimonials: Testimonial;
-    customers: Customer;
+    faqs: Faq;
+    facts: Fact;
+    leaders: Leader;
+    partners: Partner;
+    media: Media;
     enquiries: Enquiry;
-    consultants: Consultant;
+    customers: Customer;
     'chat-logs': ChatLog;
+    consultants: Consultant;
+    documents: Document;
     users: User;
     'ai-usage': AiUsage;
     'document-chunks': DocumentChunk;
@@ -92,17 +94,19 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
-    facts: FactsSelect<false> | FactsSelect<true>;
-    faqs: FaqsSelect<false> | FaqsSelect<true>;
-    documents: DocumentsSelect<false> | DocumentsSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
-    customers: CustomersSelect<false> | CustomersSelect<true>;
+    faqs: FaqsSelect<false> | FaqsSelect<true>;
+    facts: FactsSelect<false> | FactsSelect<true>;
+    leaders: LeadersSelect<false> | LeadersSelect<true>;
+    partners: PartnersSelect<false> | PartnersSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
-    consultants: ConsultantsSelect<false> | ConsultantsSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
     'chat-logs': ChatLogsSelect<false> | ChatLogsSelect<true>;
+    consultants: ConsultantsSelect<false> | ConsultantsSelect<true>;
+    documents: DocumentsSelect<false> | DocumentsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'ai-usage': AiUsageSelect<false> | AiUsageSelect<true>;
     'document-chunks': DocumentChunksSelect<false> | DocumentChunksSelect<true>;
@@ -119,9 +123,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'site-settings': SiteSetting;
+    'site-copy': SiteCopy;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'site-copy': SiteCopySelect<false> | SiteCopySelect<true>;
   };
   locale: null;
   widgets: {
@@ -131,7 +137,8 @@ export interface Config {
   jobs: {
     tasks: {
       indexDocument: TaskIndexDocument;
-      propfloSync: TaskPropfloSync;
+      crmSync: TaskCrmSync;
+      calendarBook: TaskCalendarBook;
       whatsappSend: TaskWhatsappSend;
       emailSend: TaskEmailSend;
       consultantAllocate: TaskConsultantAllocate;
@@ -164,15 +171,23 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Residential and commercial projects shown on the Construction and Real Estate pages. Save as a draft; Management or a Super Admin publishes.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "projects".
  */
 export interface Project {
   id: string;
   name: string;
+  /**
+   * The address of the project page, e.g. sdg-prinia. Leave blank to make it from the name.
+   */
   slug: string;
   business: 'construction' | 'paper' | 'glass';
   category: 'residential' | 'commercial';
+  /**
+   * Ongoing, completed or upcoming
+   */
   status: 'ongoing' | 'completed' | 'upcoming';
   /**
    * Short, e.g. Kismatpur
@@ -184,6 +199,9 @@ export interface Project {
    * As per RERA, e.g. Sep 2030
    */
   possession?: string | null;
+  /**
+   * Shown on the project page as "SDG" or "SDG partner project"
+   */
   sdgRole?: ('developer' | 'partner') | null;
   tagline?: string | null;
   summary?: string | null;
@@ -231,6 +249,9 @@ export interface Project {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Used on project cards and at the top of the project page
+   */
   heroImage?: (string | null) | Media;
   gallery?: (string | Media)[] | null;
   floorPlans?: (string | Media)[] | null;
@@ -244,19 +265,28 @@ export interface Project {
    */
   pricing?: {
     /**
-     * in ₹ lakh
+     * e.g. 180 for ₹1.8 Cr
      */
     from?: number | null;
     /**
-     * in ₹ lakh
+     * e.g. 260 for ₹2.6 Cr
      */
     to?: number | null;
     note?: string | null;
   };
+  /**
+   * Featured projects come first on the Construction page and in the Featured sort
+   */
   featured?: boolean | null;
   order?: number | null;
   seo?: {
+    /**
+     * Optional; the project name is used when blank
+     */
     title?: string | null;
+    /**
+     * Shown under the link in Google; the summary is used when blank
+     */
     description?: string | null;
   };
   updatedAt: string;
@@ -264,12 +294,20 @@ export interface Project {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Images and files used across the site.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: string;
+  /**
+   * Describe the image in a few words; read by screen readers and search engines
+   */
   alt: string;
+  /**
+   * Shown under the photo in project galleries
+   */
   credit?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -310,6 +348,8 @@ export interface Media {
   };
 }
 /**
+ * Brochures, specifications and policies the AI assistant may quote. A document is only used after a manager ticks Approved.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "documents".
  */
@@ -317,7 +357,7 @@ export interface Document {
   id: string;
   title: string;
   kind: 'brochure' | 'fact-sheet' | 'faq' | 'specification' | 'amenities' | 'company-profile' | 'product';
-  business?: ('group' | 'construction' | 'paper' | 'glass') | null;
+  business?: ('group' | 'construction' | 'paper' | 'glass' | 'agro') | null;
   project?: (string | null) | Project;
   /**
    * The text the assistant reads. Paste the brochure text here. PDF text extraction is a later step.
@@ -342,79 +382,19 @@ export interface Document {
   focalY?: number | null;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "facts".
- */
-export interface Fact {
-  id: string;
-  /**
-   * e.g. SDG-004
-   */
-  factId?: string | null;
-  category:
-    | 'Corporate Identity'
-    | 'History & Timeline'
-    | 'Business Verticals'
-    | 'Group Metrics'
-    | 'Leadership'
-    | 'Realty'
-    | 'Paper'
-    | 'Bottle Recycling'
-    | 'Agro Products'
-    | 'CSR & Sustainability';
-  business?: ('group' | 'construction' | 'paper' | 'glass') | null;
-  /**
-   * The field or claim, e.g. Employees
-   */
-  claim: string;
-  /**
-   * Approved public wording
-   */
-  wording: string;
-  /**
-   * Short value for stat tiles, e.g. 800+
-   */
-  value?: string | null;
-  status: 'draft' | 'approved' | 'do-not-publish';
-  approvedBy?: string | null;
-  approvedAt?: string | null;
-  /**
-   * Where it came from, e.g. Corporate presentation p.8
-   */
-  source?: string | null;
-  showOnHome?: boolean | null;
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "faqs".
- */
-export interface Faq {
-  id: string;
-  question: string;
-  answer: string;
-  business?: ('group' | 'construction' | 'paper' | 'glass') | null;
-  project?: (string | null) | Project;
-  order?: number | null;
-  /**
-   * Tick if the answer touches price, availability, RERA, legal or loans. The assistant will hand these off rather than answer.
-   */
-  restricted?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
+ * Articles and press coverage for the News & Blogs page. A post with an external link opens the publication instead of a page here. A draft stays hidden until it is published.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
   id: string;
   title: string;
+  /**
+   * The address of the article, e.g. handover-day. Leave blank to make it from the title.
+   */
   slug: string;
-  business?: ('group' | 'construction' | 'paper' | 'glass') | null;
+  business?: ('group' | 'construction' | 'paper' | 'glass' | 'agro') | null;
   /**
    * Reading time shown on the card
    */
@@ -424,6 +404,14 @@ export interface Post {
    * One or two sentences for the card and search results
    */
   excerpt: string;
+  /**
+   * For press coverage: the card links to this address and no page is made here
+   */
+  externalUrl?: string | null;
+  /**
+   * e.g. Deccan Chronicle; shown on the card for press coverage
+   */
+  source?: string | null;
   cover?: (string | null) | Media;
   body?: {
     root: {
@@ -449,6 +437,8 @@ export interface Post {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Open roles listed on the Careers page. Untick Active to take a role down without deleting it.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "jobs".
  */
@@ -469,6 +459,8 @@ export interface Job {
   createdAt: string;
 }
 /**
+ * Customer quotes shown on the site. Visitors only see the approved ones.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "testimonials".
  */
@@ -496,34 +488,161 @@ export interface Testimonial {
   createdAt: string;
 }
 /**
+ * With a project, an FAQ appears on that project page; without one it appears on its business page (Contact for Group). The AI assistant quotes them too. Tick Restricted for price, availability, RERA, legal or loans: the assistant hands those off.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "customers".
+ * via the `definition` "faqs".
  */
-export interface Customer {
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  business?: ('group' | 'construction' | 'paper' | 'glass') | null;
+  project?: (string | null) | Project;
+  order?: number | null;
+  /**
+   * Tick if the answer touches price, availability, RERA, legal or loans. The assistant will hand these off rather than answer.
+   */
+  restricted?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Approved numbers and claims such as employees, years and built-up area. The site and the AI assistant quote only what is here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "facts".
+ */
+export interface Fact {
   id: string;
   /**
-   * E.164, e.g. +919000000000
+   * e.g. SDG-004
    */
-  phone: string;
-  name?: string | null;
-  email?: string | null;
-  consent?: boolean | null;
-  consentAt?: string | null;
-  interests?: ('construction' | 'paper' | 'glass')[] | null;
+  factId?: string | null;
+  category:
+    | 'Corporate Identity'
+    | 'History & Timeline'
+    | 'Business Verticals'
+    | 'Group Metrics'
+    | 'Leadership'
+    | 'Realty'
+    | 'Paper'
+    | 'Bottle Recycling'
+    | 'Agro Products'
+    | 'CSR & Sustainability';
+  business?: ('group' | 'construction' | 'paper' | 'glass' | 'agro') | null;
   /**
-   * Contact ID in PropFlo once synced
+   * The field or claim, e.g. Employees
    */
-  propfloContactId?: string | null;
-  notes?: string | null;
+  claim: string;
+  /**
+   * Approved public wording
+   */
+  wording: string;
+  /**
+   * Short value for stat tiles, e.g. 800+
+   */
+  value?: string | null;
+  status: 'draft' | 'approved' | 'do-not-publish';
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  /**
+   * Where it came from, e.g. Corporate presentation p.8
+   */
+  source?: string | null;
+  showOnHome?: boolean | null;
+  order?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * The people shown on the Leadership page, in display order. Untick Active to hide someone without deleting them.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leaders".
+ */
+export interface Leader {
+  id: string;
+  /**
+   * As it should appear on the site, e.g. Dr. J. Srinivasa Reddy
+   */
+  name: string;
+  /**
+   * e.g. Managing Director
+   */
+  role: string;
+  business?: ('group' | 'construction' | 'paper' | 'glass') | null;
+  /**
+   * Which block of the Leadership page the profile sits in
+   */
+  section?: ('leadership' | 'management') | null;
+  /**
+   * e.g. MBBS, MD, MBA (ISB)
+   */
+  qualifications?: string | null;
+  /**
+   * Two or three sentences
+   */
+  bio?: string | null;
+  /**
+   * Portrait, 4:5. Initials are shown until a photo is added.
+   */
+  photo?: (string | null) | Media;
+  active?: boolean | null;
+  /**
+   * Lower numbers come first
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Partners on the Partnerships page and the client logos on each business page, grouped by business. Untick Active to hide one.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners".
+ */
+export interface Partner {
+  id: string;
+  /**
+   * A partner, a partner category (e.g. Home-loan partners) or a client
+   */
+  name: string;
+  /**
+   * Partners appear on the Partnerships page; clients appear as a logo strip on their business page
+   */
+  kind: 'partner' | 'client';
+  business: 'construction' | 'paper' | 'glass' | 'agro';
+  /**
+   * One line, e.g. Leading banks and HFCs
+   */
+  summary?: string | null;
+  /**
+   * Optional link to the partner
+   */
+  url?: string | null;
+  /**
+   * Shown beside the name on the Partnerships page and as the tile in a client logo strip
+   */
+  logo?: (string | null) | Media;
+  active?: boolean | null;
+  /**
+   * Lower numbers come first within the business
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every lead from the site forms and the AI assistant, with its score and status. Update the status as the conversation moves on.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "enquiries".
  */
 export interface Enquiry {
   id: string;
+  title?: string | null;
   customer: string | Customer;
   business: 'construction' | 'paper' | 'glass' | 'group';
   type: 'home' | 'commercial' | 'paper-trade' | 'glass-supply' | 'careers' | 'general';
@@ -586,10 +705,34 @@ export interface Enquiry {
   status?: ('new' | 'contacted' | 'visit-booked' | 'proposal' | 'negotiation' | 'booked' | 'closed-lost') | null;
   consultant?: (string | null) | Consultant;
   /**
-   * PropFlo sync, performed by the job queue with retries
+   * Set by the Book a meeting page. Once the number is verified the slot is booked on the consultant's connected Outlook calendar.
+   */
+  meeting?: {
+    /**
+     * YYYY-MM-DD
+     */
+    date?: string | null;
+    /**
+     * HH:MM IST
+     */
+    time?: string | null;
+    /**
+     * e.g. Video call, In person at the site
+     */
+    mode?: string | null;
+    calendarStatus?: ('pending' | 'booked' | 'failed' | 'skipped') | null;
+    bookedAt?: string | null;
+    eventId?: string | null;
+    eventLink?: string | null;
+    joinUrl?: string | null;
+    lastError?: string | null;
+  };
+  /**
+   * Pushed to the CRM (PropFlo, or HubSpot on staging) by the job queue with retries
    */
   crm?: {
-    propfloId?: string | null;
+    provider?: string | null;
+    leadId?: string | null;
     syncStatus?: ('pending' | 'synced' | 'failed' | 'skipped') | null;
     syncedAt?: string | null;
     lastError?: string | null;
@@ -602,6 +745,33 @@ export interface Enquiry {
   createdAt: string;
 }
 /**
+ * People who have enquired, booked a visit or used My Portal, identified by their mobile number.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: string;
+  /**
+   * E.164, e.g. +919000000000
+   */
+  phone: string;
+  name?: string | null;
+  email?: string | null;
+  consent?: boolean | null;
+  consentAt?: string | null;
+  interests?: ('construction' | 'paper' | 'glass')[] | null;
+  /**
+   * Contact ID in the CRM (PropFlo or HubSpot) once synced
+   */
+  crmContactId?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Sales consultants who receive enquiries and visit bookings, per business.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "consultants".
  */
@@ -622,14 +792,30 @@ export interface Consultant {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Meeting slots on the scheduler run hourly between these times
+   */
   hoursFrom?: string | null;
   hoursTo?: string | null;
   active?: boolean | null;
+  /**
+   * The admin account of this consultant, if they have one
+   */
   user?: (string | null) | User;
+  /**
+   * Connect this consultant's Microsoft 365 or Outlook.com calendar: confirmed meeting requests are booked on it and the scheduler greys out slots that are already taken.
+   */
+  calendar?: {
+    connectedAs?: string | null;
+    connectedAt?: string | null;
+    refreshToken?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Staff who can sign in here. The role decides what each person can see and publish.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -640,7 +826,7 @@ export interface User {
   /**
    * Business-specific administrators are limited to this business.
    */
-  business?: ('construction' | 'paper' | 'glass' | 'group') | null;
+  business?: ('construction' | 'paper' | 'glass' | 'agro' | 'group') | null;
   phone?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -663,6 +849,8 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Conversations with the AI assistant. Handoff marks the ones where a consultant was asked to take over.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "chat-logs".
  */
@@ -709,6 +897,8 @@ export interface ChatLog {
   createdAt: string;
 }
 /**
+ * Monthly AI token usage against the budget set in Site settings.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ai-usage".
  */
@@ -833,7 +1023,8 @@ export interface PayloadJob {
         taskSlug:
           | 'inline'
           | 'indexDocument'
-          | 'propfloSync'
+          | 'crmSync'
+          | 'calendarBook'
           | 'whatsappSend'
           | 'emailSend'
           | 'consultantAllocate'
@@ -875,7 +1066,8 @@ export interface PayloadJob {
     | (
         | 'inline'
         | 'indexDocument'
-        | 'propfloSync'
+        | 'crmSync'
+        | 'calendarBook'
         | 'whatsappSend'
         | 'emailSend'
         | 'consultantAllocate'
@@ -901,22 +1093,6 @@ export interface PayloadLockedDocument {
         value: string | Project;
       } | null)
     | ({
-        relationTo: 'facts';
-        value: string | Fact;
-      } | null)
-    | ({
-        relationTo: 'faqs';
-        value: string | Faq;
-      } | null)
-    | ({
-        relationTo: 'documents';
-        value: string | Document;
-      } | null)
-    | ({
-        relationTo: 'media';
-        value: string | Media;
-      } | null)
-    | ({
         relationTo: 'posts';
         value: string | Post;
       } | null)
@@ -929,20 +1105,44 @@ export interface PayloadLockedDocument {
         value: string | Testimonial;
       } | null)
     | ({
-        relationTo: 'customers';
-        value: string | Customer;
+        relationTo: 'faqs';
+        value: string | Faq;
+      } | null)
+    | ({
+        relationTo: 'facts';
+        value: string | Fact;
+      } | null)
+    | ({
+        relationTo: 'leaders';
+        value: string | Leader;
+      } | null)
+    | ({
+        relationTo: 'partners';
+        value: string | Partner;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: string | Media;
       } | null)
     | ({
         relationTo: 'enquiries';
         value: string | Enquiry;
       } | null)
     | ({
-        relationTo: 'consultants';
-        value: string | Consultant;
+        relationTo: 'customers';
+        value: string | Customer;
       } | null)
     | ({
         relationTo: 'chat-logs';
         value: string | ChatLog;
+      } | null)
+    | ({
+        relationTo: 'consultants';
+        value: string | Consultant;
+      } | null)
+    | ({
+        relationTo: 'documents';
+        value: string | Document;
       } | null)
     | ({
         relationTo: 'users';
@@ -1071,21 +1271,54 @@ export interface ProjectsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "facts_select".
+ * via the `definition` "posts_select".
  */
-export interface FactsSelect<T extends boolean = true> {
-  factId?: T;
-  category?: T;
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
   business?: T;
-  claim?: T;
-  wording?: T;
-  value?: T;
-  status?: T;
+  readMinutes?: T;
+  publishedAt?: T;
+  excerpt?: T;
+  externalUrl?: T;
+  source?: T;
+  cover?: T;
+  body?: T;
+  sample?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "jobs_select".
+ */
+export interface JobsSelect<T extends boolean = true> {
+  title?: T;
+  business?: T;
+  location?: T;
+  type?: T;
+  description?: T;
+  active?: T;
+  sample?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  quote?: T;
+  name?: T;
+  role?: T;
+  business?: T;
+  approved?: T;
+  sample?: T;
+  order?: T;
   approvedBy?: T;
   approvedAt?: T;
-  source?: T;
-  showOnHome?: T;
-  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1106,31 +1339,56 @@ export interface FaqsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "documents_select".
+ * via the `definition` "facts_select".
  */
-export interface DocumentsSelect<T extends boolean = true> {
-  title?: T;
-  kind?: T;
+export interface FactsSelect<T extends boolean = true> {
+  factId?: T;
+  category?: T;
   business?: T;
-  project?: T;
-  extractedText?: T;
-  approved?: T;
+  claim?: T;
+  wording?: T;
+  value?: T;
+  status?: T;
   approvedBy?: T;
   approvedAt?: T;
-  indexStatus?: T;
-  chunkCount?: T;
-  indexError?: T;
+  source?: T;
+  showOnHome?: T;
+  order?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leaders_select".
+ */
+export interface LeadersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  business?: T;
+  section?: T;
+  qualifications?: T;
+  bio?: T;
+  photo?: T;
+  active?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partners_select".
+ */
+export interface PartnersSelect<T extends boolean = true> {
+  name?: T;
+  kind?: T;
+  business?: T;
+  summary?: T;
   url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+  logo?: T;
+  active?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1187,76 +1445,10 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts_select".
- */
-export interface PostsSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  business?: T;
-  readMinutes?: T;
-  publishedAt?: T;
-  excerpt?: T;
-  cover?: T;
-  body?: T;
-  sample?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "jobs_select".
- */
-export interface JobsSelect<T extends boolean = true> {
-  title?: T;
-  business?: T;
-  location?: T;
-  type?: T;
-  description?: T;
-  active?: T;
-  sample?: T;
-  order?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "testimonials_select".
- */
-export interface TestimonialsSelect<T extends boolean = true> {
-  quote?: T;
-  name?: T;
-  role?: T;
-  business?: T;
-  approved?: T;
-  sample?: T;
-  order?: T;
-  approvedBy?: T;
-  approvedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "customers_select".
- */
-export interface CustomersSelect<T extends boolean = true> {
-  phone?: T;
-  name?: T;
-  email?: T;
-  consent?: T;
-  consentAt?: T;
-  interests?: T;
-  propfloContactId?: T;
-  notes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "enquiries_select".
  */
 export interface EnquiriesSelect<T extends boolean = true> {
+  title?: T;
   customer?: T;
   business?: T;
   type?: T;
@@ -1295,10 +1487,24 @@ export interface EnquiriesSelect<T extends boolean = true> {
       };
   status?: T;
   consultant?: T;
+  meeting?:
+    | T
+    | {
+        date?: T;
+        time?: T;
+        mode?: T;
+        calendarStatus?: T;
+        bookedAt?: T;
+        eventId?: T;
+        eventLink?: T;
+        joinUrl?: T;
+        lastError?: T;
+      };
   crm?:
     | T
     | {
-        propfloId?: T;
+        provider?: T;
+        leadId?: T;
         syncStatus?: T;
         syncedAt?: T;
         lastError?: T;
@@ -1314,25 +1520,17 @@ export interface EnquiriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "consultants_select".
+ * via the `definition` "customers_select".
  */
-export interface ConsultantsSelect<T extends boolean = true> {
+export interface CustomersSelect<T extends boolean = true> {
+  phone?: T;
   name?: T;
   email?: T;
-  phone?: T;
-  businesses?: T;
-  enquiryTypes?: T;
-  projects?: T;
-  locations?:
-    | T
-    | {
-        name?: T;
-        id?: T;
-      };
-  hoursFrom?: T;
-  hoursTo?: T;
-  active?: T;
-  user?: T;
+  consent?: T;
+  consentAt?: T;
+  interests?: T;
+  crmContactId?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1377,6 +1575,65 @@ export interface ChatLogsSelect<T extends boolean = true> {
   pickedUpNote?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consultants_select".
+ */
+export interface ConsultantsSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  phone?: T;
+  businesses?: T;
+  enquiryTypes?: T;
+  projects?: T;
+  locations?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
+  hoursFrom?: T;
+  hoursTo?: T;
+  active?: T;
+  user?: T;
+  calendar?:
+    | T
+    | {
+        connectedAs?: T;
+        connectedAt?: T;
+        refreshToken?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents_select".
+ */
+export interface DocumentsSelect<T extends boolean = true> {
+  title?: T;
+  kind?: T;
+  business?: T;
+  project?: T;
+  extractedText?: T;
+  approved?: T;
+  approvedBy?: T;
+  approvedAt?: T;
+  indexStatus?: T;
+  chunkCount?: T;
+  indexError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1519,13 +1776,21 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * Group name, phone, WhatsApp, email, office hours and the AI assistant's limits.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
  */
 export interface SiteSetting {
   id: string;
   groupName?: string | null;
+  /**
+   * Used in browser-tab titles, e.g. "Projects · SDG Group"
+   */
   shortName?: string | null;
+  /**
+   * The home-page headline; the first sentence becomes the first line
+   */
   tagline?: string | null;
   phone?: string | null;
   /**
@@ -1533,8 +1798,15 @@ export interface SiteSetting {
    */
   whatsapp?: string | null;
   email?: string | null;
+  /**
+   * Shown on the home page, the Construction page, the booking forms and the scheduler
+   */
   hoursText?: string | null;
   headOffice?: string | null;
+  contentVersion?: number | null;
+  /**
+   * Bookable slots on the site-visit and meeting forms run hourly between these times
+   */
   consultHours?: {
     from?: string | null;
     to?: string | null;
@@ -1552,6 +1824,9 @@ export interface SiteSetting {
     retentionDays?: number | null;
     handoffMessage?: string | null;
   };
+  /**
+   * Shown in the website footer
+   */
   social?:
     | {
         label: string;
@@ -1559,6 +1834,120 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The paragraphs on the Home, About, Leadership, Careers and business pages. Leave a blank line between paragraphs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-copy".
+ */
+export interface SiteCopy {
+  id: string;
+  /**
+   * The "About the Group" paragraphs on the home page
+   */
+  homeIntro?: string | null;
+  /**
+   * One line under the logo in the footer
+   */
+  promise?: string | null;
+  /**
+   * Shown on the home page above the testimonials and on the Partnerships page
+   */
+  b2bBody?: string | null;
+  /**
+   * The opening paragraph of the About page
+   */
+  aboutIntro?: string | null;
+  /**
+   * Shown beside the first-factory photograph above the timeline
+   */
+  origins?: string | null;
+  /**
+   * The sentence that introduces the four values
+   */
+  philosophy?: string | null;
+  /**
+   * The founding values, in order
+   */
+  values?:
+    | {
+        title: string;
+        /**
+         * Optional one-line explanation
+         */
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  legacyTitle?: string | null;
+  /**
+   * The founder's story
+   */
+  legacyBody?: string | null;
+  legacyPhoto?: (string | null) | Media;
+  /**
+   * Shown in the CSR section of the About page, above any approved CSR facts
+   */
+  csrBody?: string | null;
+  /**
+   * Photographs of the corporate office, shown at the foot of the About page
+   */
+  officeGallery?: (string | Media)[] | null;
+  csrGallery?: (string | Media)[] | null;
+  /**
+   * The paragraphs above the profiles on the Leadership page
+   */
+  successBody?: string | null;
+  /**
+   * The opening line of the Careers page
+   */
+  careersIntro?: string | null;
+  /**
+   * Under the headline on the Construction page
+   */
+  constructionIntro?: string | null;
+  /**
+   * Under the headline on the Paper page
+   */
+  paperIntro?: string | null;
+  paperGallery?: (string | Media)[] | null;
+  /**
+   * Under the headline on the Glass Recycling page
+   */
+  glassIntro?: string | null;
+  /**
+   * Beside the warehouse map
+   */
+  glassWarehouses?: string | null;
+  warehouseMap?: (string | null) | Media;
+  /**
+   * The pilot-project paragraph on the Glass Recycling page
+   */
+  glassPilot?: string | null;
+  glassGallery?: (string | Media)[] | null;
+  /**
+   * Under the headline on the Agro Products page
+   */
+  agroIntro?: string | null;
+  /**
+   * The three paragraphs on the Agro Products page
+   */
+  agroStrengths?: string | null;
+  /**
+   * One per line
+   */
+  agroSellers?: string | null;
+  /**
+   * One per line
+   */
+  agroBuyers?: string | null;
+  /**
+   * One per line
+   */
+  agroWhy?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1575,6 +1964,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   email?: T;
   hoursText?: T;
   headOffice?: T;
+  contentVersion?: T;
   consultHours?:
     | T
     | {
@@ -1603,6 +1993,49 @@ export interface SiteSettingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-copy_select".
+ */
+export interface SiteCopySelect<T extends boolean = true> {
+  homeIntro?: T;
+  promise?: T;
+  b2bBody?: T;
+  aboutIntro?: T;
+  origins?: T;
+  philosophy?: T;
+  values?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  legacyTitle?: T;
+  legacyBody?: T;
+  legacyPhoto?: T;
+  csrBody?: T;
+  officeGallery?: T;
+  csrGallery?: T;
+  successBody?: T;
+  careersIntro?: T;
+  constructionIntro?: T;
+  paperIntro?: T;
+  paperGallery?: T;
+  glassIntro?: T;
+  glassWarehouses?: T;
+  warehouseMap?: T;
+  glassPilot?: T;
+  glassGallery?: T;
+  agroIntro?: T;
+  agroStrengths?: T;
+  agroSellers?: T;
+  agroBuyers?: T;
+  agroWhy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -1623,9 +2056,19 @@ export interface TaskIndexDocument {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "TaskPropfloSync".
+ * via the `definition` "TaskCrmSync".
  */
-export interface TaskPropfloSync {
+export interface TaskCrmSync {
+  input: {
+    enquiryId: string;
+  };
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCalendarBook".
+ */
+export interface TaskCalendarBook {
   input: {
     enquiryId: string;
   };

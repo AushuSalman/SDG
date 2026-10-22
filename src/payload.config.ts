@@ -1,6 +1,7 @@
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'path'
 import { buildConfig, type Plugin } from 'payload'
 import sharp from 'sharp'
@@ -15,47 +16,84 @@ import { Enquiries } from './collections/Enquiries'
 import { Facts } from './collections/Facts'
 import { Faqs } from './collections/Faqs'
 import { Jobs } from './collections/Jobs'
+import { Leaders } from './collections/Leaders'
 import { Media } from './collections/Media'
 import { Otps } from './collections/Otps'
+import { Partners } from './collections/Partners'
 import { Posts } from './collections/Posts'
 import { Projects } from './collections/Projects'
 import { Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
+import { SiteCopy } from './globals/SiteCopy'
 import { SiteSettings } from './globals/SiteSettings'
 import { tasks } from './jobs/tasks'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-/** Media and documents go to S3 when a bucket is configured; local disk otherwise (dev). */
-const plugins: Plugin[] = process.env.S3_BUCKET
-  ? [
-      s3Storage({
-        collections: { media: { prefix: 'media' }, documents: { prefix: 'documents' } },
-        bucket: process.env.S3_BUCKET,
-        config: {
-          region: process.env.AWS_REGION || 'ap-south-1',
-          ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
-            ? { credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY } }
-            : {}),
-        },
-      }),
-    ]
-  : []
+const UPLOAD_COLLECTIONS = { media: { prefix: 'media' }, documents: { prefix: 'documents' } }
+
+/**
+ * Where uploads live. S3 when a bucket is configured (the Lightsail production path). Vercel Blob on the temporary
+ * staging hosts, whose filesystems are read-only: implied on Vercel itself, opted into elsewhere (Render, or a machine
+ * seeding the staging database) with MEDIA_STORAGE=vercel-blob. The local disk otherwise (dev).
+ */
+const storage = process.env.S3_BUCKET
+  ? 's3'
+  : process.env.BLOB_READ_WRITE_TOKEN && (process.env.MEDIA_STORAGE === 'vercel-blob' || process.env.VERCEL)
+    ? 'vercel-blob'
+    : 'local'
+
+const plugins: Plugin[] =
+  storage === 's3'
+    ? [
+        s3Storage({
+          collections: UPLOAD_COLLECTIONS,
+          bucket: process.env.S3_BUCKET as string,
+          config: {
+            region: process.env.AWS_REGION || 'ap-south-1',
+            ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+              ? { credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY } }
+              : {}),
+          },
+        }),
+      ]
+    : storage === 'vercel-blob'
+      ? [vercelBlobStorage({ collections: UPLOAD_COLLECTIONS, token: process.env.BLOB_READ_WRITE_TOKEN })]
+      : []
 
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : process.env.RENDER_EXTERNAL_URL || undefined),
   admin: {
     user: Users.slug,
-    meta: { titleSuffix: ' · SDG admin' },
+    // One light theme in the brand colours, no dark-mode toggle: the admin is for non-technical staff (SOW §4.1).
+    theme: 'light',
+    dateFormat: 'd MMM yyyy, h:mm a',
+    meta: {
+      titleSuffix: ' · SDG admin',
+      description: 'Staff admin for the SDG Group website, enquiries and AI assistant.',
+      icons: [{ rel: 'icon', type: 'image/png', url: '/img/icon-192.png' }],
+    },
+    // TailAdmin shell: our sidebar, header actions and dashboard; Payload's own list and edit views are restyled in custom.scss.
+    components: {
+      graphics: { Logo: '/components/admin/Brand#AdminLogo', Icon: '/components/admin/Brand#AdminIcon' },
+      providers: ['/components/admin/AdminFonts#AdminFonts'],
+      Nav: '/components/admin/AdminNav#AdminNav',
+      actions: ['/components/admin/HeaderActions#HeaderActions'],
+      beforeLogin: ['/components/admin/LoginNote#LoginNote'],
+      views: { dashboard: { Component: '/components/admin/AdminDashboard#AdminDashboard' } },
+    },
     importMap: { baseDir: path.resolve(dirname) },
   },
+  // Order here is the order of the admin navigation, grouped by each collection's admin.group.
   collections: [
-    Projects, Facts, Faqs, Documents, Media, Posts, Jobs, Testimonials,
-    Customers, Enquiries, Consultants, ChatLogs,
-    Users, AiUsage, DocumentChunks, Otps,
+    Projects, Posts, Jobs, Testimonials, Faqs, Facts, Leaders, Partners, Media, // Website
+    Enquiries, Customers, ChatLogs, Consultants, // Enquiries & customers
+    Documents, // AI knowledge
+    Users, AiUsage, // Staff & system
+    DocumentChunks, Otps, // hidden
   ],
-  globals: [SiteSettings],
+  globals: [SiteSettings, SiteCopy],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

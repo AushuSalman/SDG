@@ -1,3 +1,4 @@
+import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -8,7 +9,7 @@ import { DecisionTools } from '@/components/project/DecisionTools'
 import { ProjectGallery } from '@/components/project/ProjectGallery'
 import { ProjectTabs } from '@/components/project/ProjectTabs'
 import { AskAiButton, BookVisitButton, BrochureButton, ShareButton } from '@/components/ui/actions'
-import { CATEGORY_LABEL, STATUS_LABEL, getFaqs, getProjectBySlug, getProjects, mediaUrl, priceBand, projectImage } from '@/lib/content'
+import { CATEGORY_LABEL, STATUS_LABEL, getFaqs, getProjectBySlug, getProjects, mediaCredit, mediaUrl, priceBand, projectImage } from '@/lib/content'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { slug } = await params
   const p = await getProjectBySlug(slug)
   if (!p) return { title: 'Project not found' }
-  return { title: `${p.name} · ${p.location}`, description: p.seo?.description || p.summary || p.tagline || undefined, openGraph: { images: [projectImage(p, 'wide')] } }
+  return { title: p.seo?.title || `${p.name} · ${p.location}`, description: p.seo?.description || p.summary || p.tagline || undefined, openGraph: { images: [projectImage(p, 'wide')] } }
 }
 
 const LIB: Record<string, [string, string][]> = {
@@ -32,8 +33,12 @@ export default async function ProjectPage({ params }: { params: Params }) {
   if (!project) notFound()
   const [faqs, siblings] = await Promise.all([getFaqs({ projectId: String(project.id) }), getProjects({ business: 'construction', category: project.category })])
   const res = project.category === 'residential'
-  const own = [mediaUrl(project.heroImage, 'wide'), ...(project.gallery || []).map((g) => mediaUrl(g, 'card'))].filter(Boolean) as string[]
-  const images = own.length ? own.map((src, i) => ({ src, alt: `${project.name}, photo ${i + 1}` })) : LIB[project.category].map(([src, alt]) => ({ src, alt: `${alt} (library photo, pending ${project.name} photography)` }))
+  const own = [project.heroImage, ...(project.gallery || [])]
+    .map((m, i) => ({ src: mediaUrl(m, i === 0 ? 'wide' : 'card'), credit: mediaCredit(m) }))
+    .filter((m): m is { src: string; credit: string | null } => Boolean(m.src))
+  const images = own.length
+    ? own.map((m, i) => ({ src: m.src, alt: `${project.name}, photo ${i + 1}`, credit: m.credit }))
+    : LIB[project.category].map(([src, alt]) => ({ src, alt: `${alt} (library photo, pending ${project.name} photography)` }))
   const price = priceBand(project)
   const specs = project.specs || {}
   const specRows = ([
@@ -62,10 +67,11 @@ export default async function ProjectPage({ params }: { params: Params }) {
           <div className="card">
             <dl className="kv">
               <dt>Status</dt><dd>{STATUS_LABEL[project.status]}{project.possession ? ` · possession ${project.possession}` : ''}</dd>
+              <dt>Developer</dt><dd>{project.sdgRole === 'partner' ? 'SDG partner project' : 'SDG'}</dd>
               {cfgSummary && <><dt>{res ? 'Configurations' : 'Space'}</dt><dd>{cfgSummary}</dd></>}
               {price && <><dt>Indicative price</dt><dd>{price} (indicative)</dd></>}
               {specs.saleableArea && <><dt>Saleable area</dt><dd>{specs.saleableArea}</dd></>}
-              <dt>RERA</dt><dd className="num">{project.rera || 'Registration published on launch'}</dd>
+              <dt>RERA</dt><dd className="num">{project.rera || (project.status === 'completed' ? 'Not published' : 'Registration published on launch')}</dd>
             </dl>
           </div>
         </div>
@@ -81,6 +87,7 @@ export default async function ProjectPage({ params }: { params: Params }) {
             specs: specRows, highlights: (project.highlights || []).map((h) => h.text), faqs: faqs.map((f) => ({ q: f.question, a: f.answer })), brochureUrl,
           }} />
           {project.summary && <p className="lede" style={{ marginTop: 20, fontSize: 15.5 }}>{project.summary}</p>}
+          {project.description && <div className="prose" style={{ marginTop: 16 }}><RichText data={project.description} /></div>}
 
           {res ? (
             <DecisionTools name={project.name} slug={project.slug} priceFromLakh={project.pricing?.from} configurations={configs} />

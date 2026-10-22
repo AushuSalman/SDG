@@ -5,10 +5,13 @@ import { canSeeCustomers } from '@/lib/access'
 /** One contact per phone number; every enquiry hangs off it (questionnaire Q4). */
 export const Customers: CollectionConfig = {
   slug: 'customers',
+  labels: { singular: 'Customer', plural: 'Customers' },
   admin: {
     useAsTitle: 'phone',
-    group: 'Relationships',
+    group: 'Enquiries & customers',
+    description: 'People who have enquired, booked a visit or used My Portal, identified by their mobile number.',
     defaultColumns: ['phone', 'name', 'email', 'consent', 'createdAt'],
+    listSearchableFields: ['phone', 'name', 'email'],
   },
   access: {
     read: canSeeCustomers,
@@ -24,7 +27,7 @@ export const Customers: CollectionConfig = {
     ] },
     { type: 'row', fields: [
       { name: 'consent', type: 'checkbox', defaultValue: false },
-      { name: 'consentAt', type: 'date' },
+      { name: 'consentAt', type: 'date', label: 'Consent given at' },
     ] },
     {
       name: 'interests',
@@ -32,7 +35,7 @@ export const Customers: CollectionConfig = {
       hasMany: true,
       options: ['construction', 'paper', 'glass'],
     },
-    { name: 'propfloContactId', type: 'text', admin: { description: 'Contact ID in PropFlo once synced' } },
+    { name: 'crmContactId', type: 'text', label: 'CRM contact ID', admin: { description: 'Contact ID in the CRM (PropFlo or HubSpot) once synced' } },
     { name: 'notes', type: 'textarea' },
   ],
 }

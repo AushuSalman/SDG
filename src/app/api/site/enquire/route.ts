@@ -24,6 +24,14 @@ const Source = z.object({
   referrer: z.string().optional(),
 })
 
+/** A slot chosen on the Book a meeting page; the consultant is the desk the visitor picked. */
+const Meeting = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  time: z.string().regex(/^\d{2}:\d{2}$/),
+  mode: z.string().max(60),
+  consultantId: z.string().optional(),
+})
+
 const Body = z.object({
   phone: z.string().min(8).max(20),
   name: z.string().min(2).max(120),
@@ -43,6 +51,7 @@ const Body = z.object({
   message: z.string().max(2000).optional(),
   consent: z.literal(true, { errorMap: () => ({ message: 'Consent is required' }) }),
   source: Source.optional(),
+  meeting: Meeting.optional(),
   /** Verification token from /api/site/otp/verify. Optional on first save so a drop-off is still captured. */
   token: z.string().optional(),
   /** When set, this call verifies an enquiry created earlier instead of creating a new one. */
@@ -94,6 +103,7 @@ export async function POST(req: Request) {
       consent: true,
       otpVerified,
       source: { ...body.source, channel: asChannel(body.source?.channel) },
+      ...(body.meeting ? { meeting: { date: body.meeting.date, time: body.meeting.time, mode: body.meeting.mode }, consultant: body.meeting.consultantId } : {}),
     }
 
     if (body.enquiryId) {

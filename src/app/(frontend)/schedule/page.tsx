@@ -3,6 +3,7 @@ import React from 'react'
 
 import { Scheduler, type Desk } from '@/components/Scheduler'
 import { getConsultants, getSettings } from '@/lib/content'
+import { slotsFromHours } from '@/lib/hours'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Book a meeting', description: 'Book a call or a meeting with the right SDG consultant for your enquiry.' }
@@ -19,7 +20,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const [consultants, settings, sp] = await Promise.all([getConsultants(), getSettings(), searchParams])
   const desks: Desk[] = consultants.map((c) => {
     const b = c.businesses[0] || 'construction'
-    return { id: String(c.id), business: b, title: TITLE[b], name: c.name, role: `${c.locations?.map((l) => l.name).join(', ') || 'Hyderabad'} · ${c.hoursFrom || '10:00'}–${c.hoursTo || '18:00'} IST`, modes: MODES[b], type: TYPE[b] }
+    return { id: String(c.id), business: b, title: TITLE[b], name: c.name, role: `${c.locations?.map((l) => l.name).join(', ') || 'Hyderabad'} · ${c.hoursFrom || '10:00'}–${c.hoursTo || '18:00'} IST`, modes: MODES[b], type: TYPE[b], slots: slotsFromHours(c.hoursFrom, c.hoursTo) }
   })
   return (
     <div className="wrap">
@@ -29,7 +30,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
         <p className="lede">Tell us what you need and we route you to the SDG consultant for that business. Confirmation by phone and WhatsApp.</p>
       </section>
       <section className="co-section" style={{ paddingTop: 24 }}>
-        {desks.length === 0 ? <p className="notice">Consultant desks are set up in the admin; the scheduler opens once they are.</p> : <Scheduler desks={desks} preselect={sp.desk} hoursText={settings.hoursText || 'Mon–Sat, 09:30 – 18:30 IST'} />}
+        {desks.length === 0 ? <p className="notice">Consultant desks are set up in the admin; the scheduler opens once they are.</p> : <Scheduler desks={desks} preselect={sp.desk} hoursText={settings.hoursText || 'Mon–Sat, 09:30 – 18:30 IST'} slots={slotsFromHours(settings.consultHours?.from, settings.consultHours?.to)} />}
       </section>
     </div>
   )

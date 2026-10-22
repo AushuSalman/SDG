@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import React, { useMemo, useState } from 'react'
 
-import { VISIT_HOURS, VISIT_SLOTS, captureSource, fmtDay, post, visitCheck, visitDay } from '@/lib/client/enquiry'
+import { captureSource, fmtDay, post, visitCheck, visitDay } from '@/lib/client/enquiry'
 
 import { Modal } from './Modal'
 import { useUi } from './UiProvider'
@@ -77,7 +77,7 @@ export function BookingSheet({ pre, onClose }: { pre: BookingPrefill; onClose: (
       {step === 'slot' && (
         <form onSubmit={nextSlot} noValidate>
           <h3>Book a site visit</h3>
-          <p className="lede" style={{ fontSize: 14 }}>Request a visit with the Construction team. Visits {VISIT_HOURS}; the team confirms your slot.</p>
+          <p className="lede" style={{ fontSize: 14 }}>Request a visit with the Construction team. Visits {ui.hoursText}; the team confirms your slot.</p>
           <label className="vl" htmlFor="vsProj">Project</label>
           <select className="vf" id="vsProj" value={v.project} aria-invalid={bad === 'project' || undefined} onChange={(e) => setV({ ...v, project: e.target.value })}>
             <option value="">Select project</option>
@@ -88,7 +88,7 @@ export function BookingSheet({ pre, onClose }: { pre: BookingPrefill; onClose: (
           <label className="vl" htmlFor="vsTime">Preferred time</label>
           <select className="vf" id="vsTime" value={v.time} aria-invalid={bad === 'time' || undefined} onChange={(e) => setV({ ...v, time: e.target.value })}>
             <option value="">Select time</option>
-            {VISIT_SLOTS.map((s) => <option key={s}>{s}</option>)}
+            {ui.visitSlots.map((s) => <option key={s}>{s}</option>)}
           </select>
           <p className="verr" role="alert">{err}</p>
           <div className="foot"><button type="button" className="btn ghost" data-x>Cancel</button><button type="submit" className="btn accent">Continue</button></div>

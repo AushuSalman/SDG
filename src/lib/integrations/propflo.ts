@@ -3,22 +3,9 @@
  * The exact request shape is confirmed against the sandbox in the spike; keep all mapping in mapLead().
  * Live when PROPFLO_API_URL and PROPFLO_API_KEY are set, otherwise the sync is marked "skipped".
  */
-export type PropfloLead = {
-  name?: string | null
-  mobile: string
-  email?: string | null
-  project?: string | null
-  enquiryType: string
-  purpose?: string | null
-  budgetBand?: string | null
-  timeline?: string | null
-  source: string
-  utm?: Record<string, string | null | undefined>
-  message?: string | null
-  score?: number | null
-  band?: string | null
-  websiteEnquiryId: string
-}
+import type { CrmLead } from './lead'
+
+export type PropfloLead = CrmLead
 
 export function mapLead(lead: PropfloLead): Record<string, unknown> {
   return {
@@ -45,7 +32,7 @@ export function propfloConfigured(): boolean {
   return Boolean(process.env.PROPFLO_API_URL && process.env.PROPFLO_API_KEY)
 }
 
-export async function createLead(lead: PropfloLead): Promise<{ id: string }> {
+export async function createLead(lead: PropfloLead): Promise<{ id: string; contactId?: string }> {
   const base = process.env.PROPFLO_API_URL!
   const res = await fetch(`${base.replace(/\/$/, '')}/leads`, {
     method: 'POST',
@@ -57,6 +44,7 @@ export async function createLead(lead: PropfloLead): Promise<{ id: string }> {
     body: JSON.stringify(mapLead(lead)),
   })
   if (!res.ok) throw new Error(`PropFlo ${res.status}: ${await res.text()}`)
-  const json = (await res.json().catch(() => ({}))) as { id?: string; lead_id?: string; data?: { id?: string } }
-  return { id: String(json.id || json.lead_id || json.data?.id || '') }
+  const json = (await res.json().catch(() => ({}))) as { id?: string; lead_id?: string; contact_id?: string; contactId?: string; data?: { id?: string; contact_id?: string } }
+  const contactId = json.contact_id || json.contactId || json.data?.contact_id
+  return { id: String(json.id || json.lead_id || json.data?.id || ''), contactId: contactId ? String(contactId) : undefined }
 }

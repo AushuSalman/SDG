@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { canSeeCustomers } from '@/lib/access'
+import { runQueueSoon } from '@/lib/queue'
 import { scoreEnquiry } from '@/lib/scoring'
 
 export const ENQUIRY_TYPES = [
@@ -30,10 +31,13 @@ export const TIMELINES = [
 
 export const Enquiries: CollectionConfig = {
   slug: 'enquiries',
+  labels: { singular: 'Enquiry', plural: 'Enquiries' },
   admin: {
-    useAsTitle: 'id',
-    group: 'Relationships',
-    defaultColumns: ['customer', 'type', 'project', 'band', 'score', 'status', 'createdAt'],
+    useAsTitle: 'title',
+    group: 'Enquiries & customers',
+    description: 'Every lead from the site forms and the AI assistant, with its score and status. Update the status as the conversation moves on.',
+    defaultColumns: ['title', 'type', 'project', 'band', 'score', 'status', 'createdAt'],
+    listSearchableFields: ['title', 'message', 'preferredLocation', 'configuration'],
   },
   access: {
     read: canSeeCustomers,
@@ -43,7 +47,7 @@ export const Enquiries: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      ({ data }) => {
+      async ({ data, req }) => {
         const result = scoreEnquiry({
           type: data.type,
           budgetBand: data.budgetBand,
@@ -59,22 +63,44 @@ export const Enquiries: CollectionConfig = {
         data.score = result.score
         data.band = result.band
         data.scoreReasons = result.reasons.map((reason) => ({ reason }))
+        // Title for the admin list and page header: who, and what about.
+        try {
+          const customerId = typeof data.customer === 'object' && data.customer ? data.customer.id : data.customer
+          const projectId = typeof data.project === 'object' && data.project ? data.project.id : data.project
+          const [customer, project] = await Promise.all([
+            customerId ? req.payload.findByID({ collection: 'customers', id: customerId, depth: 0, overrideAccess: true }) : null,
+            projectId ? req.payload.findByID({ collection: 'projects', id: projectId, depth: 0, overrideAccess: true }) : null,
+          ])
+          const who = customer?.name || customer?.phone || 'Enquiry'
+          const what = project?.name || ENQUIRY_TYPES.find((t) => t.value === data.type)?.label || data.business || ''
+          data.title = what ? `${who} · ${what}` : who
+        } catch {
+          // The title is cosmetic; never block a lead on it.
+        }
         return data
       },
     ],
     afterChange: [
-      async ({ doc, operation, req }) => {
-        if (operation !== 'create') return doc
+      async ({ doc, previousDoc, operation, req }) => {
         const id = String(doc.id)
         // Everything outbound goes through the job queue so a CRM or WhatsApp outage never loses a lead.
-        await req.payload.jobs.queue({ task: 'propfloSync', input: { enquiryId: id } })
-        await req.payload.jobs.queue({ task: 'whatsappSend', input: { enquiryId: id, template: 'enquiry_ack' } })
-        await req.payload.jobs.queue({ task: 'consultantAllocate', input: { enquiryId: id } })
+        if (operation === 'create') {
+          await req.payload.jobs.queue({ task: 'crmSync', input: { enquiryId: id } })
+          await req.payload.jobs.queue({ task: 'whatsappSend', input: { enquiryId: id, template: 'enquiry_ack' } })
+          await req.payload.jobs.queue({ task: 'consultantAllocate', input: { enquiryId: id } })
+        }
+        // A scheduler request goes on the consultant's calendar once the visitor has verified their number.
+        const verifiedNow = Boolean(doc.otpVerified) && (operation === 'create' || !previousDoc?.otpVerified)
+        const booking = verifiedNow && doc.meeting?.date && doc.meeting?.time && doc.meeting?.calendarStatus !== 'booked'
+        if (booking) await req.payload.jobs.queue({ task: 'calendarBook', input: { enquiryId: id } })
+        if (operation === 'create' || booking) runQueueSoon(req.payload)
         return doc
       },
     ],
   },
   fields: [
+    // Set by the beforeChange hook from the customer and the project; what the admin shows as the record's name.
+    { name: 'title', type: 'text', admin: { hidden: true } },
     { name: 'customer', type: 'relationship', relationTo: 'customers', required: true, index: true },
     { type: 'row', fields: [
       {
@@ -97,13 +123,13 @@ export const Enquiries: CollectionConfig = {
           { label: 'Business requirement', value: 'business' },
         ],
       },
-      { name: 'budgetBand', type: 'select', options: [...BUDGET_BANDS] },
+      { name: 'budgetBand', type: 'select', label: 'Budget', options: [...BUDGET_BANDS] },
       { name: 'timeline', type: 'select', options: [...TIMELINES] },
     ] },
     { type: 'row', fields: [
       { name: 'preferredLocation', type: 'text' },
       { name: 'configuration', type: 'text', admin: { description: 'e.g. 3 BHK, or area for commercial' } },
-      { name: 'loanRequired', type: 'select', defaultValue: 'unknown', options: ['yes', 'no', 'unknown'] },
+      { name: 'loanRequired', type: 'select', label: 'Home loan needed', defaultValue: 'unknown', options: ['yes', 'no', 'unknown'] },
     ] },
     { type: 'row', fields: [
       { name: 'quantity', type: 'text', admin: { description: 'Paper or glass: required quantity' } },
@@ -114,6 +140,7 @@ export const Enquiries: CollectionConfig = {
     {
       name: 'source',
       type: 'group',
+      label: 'Where the lead came from',
       fields: [
         {
           name: 'channel',
@@ -125,20 +152,20 @@ export const Enquiries: CollectionConfig = {
           ],
         },
         { type: 'row', fields: [
-          { name: 'utmSource', type: 'text' },
-          { name: 'utmMedium', type: 'text' },
-          { name: 'utmCampaign', type: 'text' },
+          { name: 'utmSource', type: 'text', label: 'UTM source' },
+          { name: 'utmMedium', type: 'text', label: 'UTM medium' },
+          { name: 'utmCampaign', type: 'text', label: 'UTM campaign' },
         ] },
         { type: 'row', fields: [
-          { name: 'utmContent', type: 'text' },
-          { name: 'utmTerm', type: 'text' },
+          { name: 'utmContent', type: 'text', label: 'UTM content' },
+          { name: 'utmTerm', type: 'text', label: 'UTM term' },
           { name: 'landingPage', type: 'text' },
         ] },
         { name: 'referrer', type: 'text' },
       ],
     },
     { type: 'row', fields: [
-      { name: 'otpVerified', type: 'checkbox', defaultValue: false, admin: { readOnly: true } },
+      { name: 'otpVerified', type: 'checkbox', label: 'OTP verified', defaultValue: false, admin: { readOnly: true } },
       { name: 'consent', type: 'checkbox', defaultValue: false, admin: { readOnly: true } },
     ] },
     {
@@ -152,7 +179,7 @@ export const Enquiries: CollectionConfig = {
       admin: { position: 'sidebar', readOnly: true },
       options: ['hot', 'warm', 'cold'],
     },
-    { name: 'scoreReasons', type: 'array', admin: { readOnly: true }, fields: [{ name: 'reason', type: 'text' }] },
+    { name: 'scoreReasons', type: 'array', label: 'Why this score', admin: { readOnly: true }, fields: [{ name: 'reason', type: 'text' }] },
     {
       name: 'status',
       type: 'select',
@@ -164,25 +191,49 @@ export const Enquiries: CollectionConfig = {
     },
     { name: 'consultant', type: 'relationship', relationTo: 'consultants', admin: { position: 'sidebar' } },
     {
-      name: 'crm',
+      name: 'meeting',
       type: 'group',
-      admin: { description: 'PropFlo sync, performed by the job queue with retries' },
+      label: 'Meeting request',
+      admin: { description: 'Set by the Book a meeting page. Once the number is verified the slot is booked on the consultant\'s connected Outlook calendar.' },
       fields: [
         { type: 'row', fields: [
-          { name: 'propfloId', type: 'text', admin: { readOnly: true } },
-          { name: 'syncStatus', type: 'select', defaultValue: 'pending', options: ['pending', 'synced', 'failed', 'skipped'], admin: { readOnly: true } },
-          { name: 'syncedAt', type: 'date', admin: { readOnly: true } },
+          { name: 'date', type: 'text', admin: { description: 'YYYY-MM-DD' } },
+          { name: 'time', type: 'text', admin: { description: 'HH:MM IST' } },
+          { name: 'mode', type: 'text', admin: { description: 'e.g. Video call, In person at the site' } },
         ] },
-        { name: 'lastError', type: 'text', admin: { readOnly: true } },
+        { type: 'row', fields: [
+          { name: 'calendarStatus', type: 'select', label: 'Calendar', defaultValue: 'pending', options: ['pending', 'booked', 'failed', 'skipped'], admin: { readOnly: true } },
+          { name: 'bookedAt', type: 'date', label: 'Booked at', admin: { readOnly: true } },
+          { name: 'eventId', type: 'text', label: 'Outlook event ID', admin: { readOnly: true } },
+        ] },
+        { name: 'eventLink', type: 'text', label: 'Open in Outlook', admin: { readOnly: true } },
+        { name: 'joinUrl', type: 'text', label: 'Teams link', admin: { readOnly: true } },
+        { name: 'lastError', type: 'text', label: 'Last error', admin: { readOnly: true } },
+      ],
+    },
+    {
+      name: 'crm',
+      type: 'group',
+      label: 'CRM sync',
+      admin: { description: 'Pushed to the CRM (PropFlo, or HubSpot on staging) by the job queue with retries' },
+      fields: [
+        { type: 'row', fields: [
+          { name: 'provider', type: 'text', label: 'CRM', admin: { readOnly: true } },
+          { name: 'leadId', type: 'text', label: 'CRM lead ID', admin: { readOnly: true } },
+          { name: 'syncStatus', type: 'select', label: 'Sync status', defaultValue: 'pending', options: ['pending', 'synced', 'failed', 'skipped'], admin: { readOnly: true } },
+          { name: 'syncedAt', type: 'date', label: 'Synced at', admin: { readOnly: true } },
+        ] },
+        { name: 'lastError', type: 'text', label: 'Last error', admin: { readOnly: true } },
       ],
     },
     {
       name: 'acknowledgement',
       type: 'group',
+      label: 'WhatsApp acknowledgement',
       fields: [
         { type: 'row', fields: [
-          { name: 'whatsappStatus', type: 'select', defaultValue: 'pending', options: ['pending', 'sent', 'failed', 'skipped'], admin: { readOnly: true } },
-          { name: 'whatsappAt', type: 'date', admin: { readOnly: true } },
+          { name: 'whatsappStatus', type: 'select', label: 'WhatsApp status', defaultValue: 'pending', options: ['pending', 'sent', 'failed', 'skipped'], admin: { readOnly: true } },
+          { name: 'whatsappAt', type: 'date', label: 'Sent at', admin: { readOnly: true } },
         ] },
       ],
     },

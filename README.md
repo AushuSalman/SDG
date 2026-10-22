@@ -5,8 +5,10 @@ enquiry pipeline and the AI assistant. MongoDB Atlas (Mumbai) is the database, S
 Amazon Bedrock's India inference profile powers the assistant. Deployed as one Docker container behind
 Caddy on an AWS Lightsail server, built and shipped from Azure DevOps.
 
-Design: the Refined skin (navy and brass on cream, Fraunces headlines, Inter body, pill buttons) per
-`../docs/sdg-design-tokens.md`, reference wireframe `../sdg-wireframe-refined.html`. Architecture: team v3, 13 Oct 2026.
+Design: the public site uses the Refined skin (navy and brass on cream, Fraunces headlines, Inter body, pill
+buttons) per `../docs/sdg-design-tokens.md`, reference wireframe `../sdg-wireframe-refined.html`. The staff
+admin uses the TailAdmin Pro 2.2 theme (Outfit, brand blue, white cards on gray); see "Admin" below.
+Architecture: team v3, 13 Oct 2026.
 
 ## Run it locally
 
@@ -27,6 +29,28 @@ on-disk storage, so content survives restarts. Browse it in MongoDB Compass at `
 With a real database: copy `.env.example` to `.env`, fill `DATABASE_URL` and `PAYLOAD_SECRET`, then
 `npm run seed` once and `npm run dev`.
 
+## Admin
+
+The admin at `/admin` is Payload's, dressed as TailAdmin and limited to the light theme. Only the `(payload)`
+route group is touched; the public site keeps its own stylesheet and Tailwind setup in `(frontend)`.
+
+- `src/app/(payload)/tailadmin.css`: TailAdmin's Tailwind v4 theme tokens and sidebar utilities, imported
+  without Tailwind's preflight so Payload's own resets stay intact (the few base rules TailAdmin needs are
+  scoped to `.ta`).
+- `src/app/(payload)/custom.scss`: Payload's list, edit, header and sign-in views restyled with the same tokens.
+- `src/components/admin/`: the TailAdmin pieces. `AdminNav` + `AdminNavClient` replace the sidebar (same
+  access-controlled groups: Website, Enquiries & customers, AI knowledge, Staff & system); `AdminDashboard`
+  replaces the home view with KPI cards, enquiries-per-month and by-business charts (ApexCharts), the work
+  queue for the signed-in role, recent enquiries and content status; `HeaderActions`, `LoginNote`, `Brand`
+  and `AdminFonts` cover the header, sign-in page, logo and Outfit font. `tailadmin/icons.tsx` holds the
+  template's icons converted to plain React components (no SVGR). All of it is registered in
+  `payload.config.ts` under `admin.components`.
+- Collections carry plain-language labels, groups and a one-line description that shows at the top of each
+  list. Changing a label never changes the slug or the API.
+
+After adding or renaming an admin component, run `node node_modules/payload/bin.js generate:importmap`
+(the npm script sometimes exits silently; `next dev` also regenerates the map on start).
+
 ## What is where
 
 | Path | Purpose |
@@ -37,13 +61,38 @@ With a real database: copy `.env.example` to `.env`, fill `DATABASE_URL` and `PA
 | `src/lib/scoring.ts` | Rules-based lead qualification with the client's Q17 weights |
 | `src/lib/otp.ts` | OTP issue and verify, rate limits, verification tokens |
 | `src/lib/ai/` | Classify → retrieve (Atlas Vector Search) → draft (Bedrock) → post-check → log |
-| `src/lib/integrations/` | MSG91, WhatsApp Cloud API, PropFlo adapter, SES |
-| `src/jobs/tasks.ts` | Payload job queue: document indexing, PropFlo sync, WhatsApp, email, consultant allocation, hand-off notification, retention sweep |
+| `src/lib/integrations/` | MSG91, WhatsApp Cloud API, SES, the CRM layer (`crm.ts` picks PropFlo or HubSpot; one adapter each) and Microsoft Graph calendar (`graph.ts`) |
+| `src/jobs/tasks.ts` | Payload job queue: document indexing, CRM sync, calendar booking, WhatsApp, email, consultant allocation, hand-off notification, retention sweep |
 | `src/app/api/site/` | Public API: `otp/send`, `otp/verify`, `enquire`, `chat`, `portal`, `health` |
 | `src/app/(frontend)/` | Pages, one per wireframe route: home, real-estate, projects (discovery) and projects/[slug], paper, glass, about, leadership, partnerships, careers, blog and blog/[slug], portal, contact, schedule, readiness, roi, proposal (space designer), past-projects, documents (summariser), map, privacy, 404. `globals.css` holds the Refined tokens and chrome; `site.css` the page sections |
 | `src/components/` | `SiteHeader` (six-entry menu with Our Businesses and About dropdowns, share and Ask SDG icons), `SiteFooter`, `SectionBar` (business page bars), `EnquiryForm`, `PortalClient`, `Scheduler`, `ReadinessWizard`, `CareerForm`; `ui/` holds the `UiProvider` (toast, AI drawer, booking, share and brochure sheets, lightbox), `CtaDock`, `CookieNotice`; `construction/`, `project/` and `tools/` hold the page-specific client components |
-| `src/seed/` | Approved content from the client's fact sheet and questionnaire |
+| `src/seed/` | Site content: the client's approved fact sheet and questionnaire plus the text and imagery migrated from sdg.in (`assets/`). `run.ts` upserts it by natural key whenever `CONTENT_VERSION` is bumped |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile`, `azure-pipelines.yml` | Build and deploy |
+
+## CRM and calendar
+
+**CRM.** Every enquiry is queued to `crmSync`, which writes it to whichever CRM has credentials: PropFlo
+(`PROPFLO_API_URL` + `PROPFLO_API_KEY`, SDG's CRM, no self-service sign-up) or HubSpot's free CRM
+(`HUBSPOT_ACCESS_TOKEN`, used on staging). `CRM_PROVIDER` forces one. In HubSpot the contact is matched by mobile
+number and the enquiry details land in custom `sdg_*` contact properties (created on first use; without the schema
+scope they go into the Message property). The enquiry's CRM group shows the provider, lead ID and sync status; the
+customer keeps the CRM contact ID.
+
+HubSpot set-up (free): create an account at hubspot.com → Settings → Integrations → Private apps → Create app →
+Scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.schemas.contacts.read`,
+`crm.schemas.contacts.write` → copy the access token into `HUBSPOT_ACCESS_TOKEN`.
+
+**Calendar.** A request from Book a meeting carries the slot and the chosen desk (`meeting` on the enquiry). Once the
+visitor verifies their number, `calendarBook` creates the event on that consultant's connected Outlook calendar,
+with the visitor as attendee when they gave an email, and the scheduler greys out slots the calendar already has
+(`/api/site/calendar/busy`). Each consultant connects their own calendar from Sales consultants → Outlook calendar
+→ Connect; the refresh token is stored on the record, hidden and unreadable through the API.
+
+Microsoft set-up: a free Outlook.com account works for a consultant. Register an app at entra.microsoft.com →
+App registrations → New (supported account types: personal + any org, or whichever applies) → Redirect URI (Web)
+`<site>/api/site/calendar/callback` → Certificates & secrets → new client secret → API permissions (delegated):
+`Calendars.ReadWrite`, `User.Read`, `offline_access`. Put the application (client) ID and secret in `MS_CLIENT_ID`,
+`MS_CLIENT_SECRET`; `MS_TENANT=common` for mixed accounts or `consumers` for Outlook.com only.
 
 ## How the pieces behave
 
@@ -89,18 +138,30 @@ npx vercel env add PAYLOAD_SECRET production    # 32+ random characters
 npx vercel env add AI_MODE production           # mock until Bedrock keys exist
 npx vercel env add OTP_MODE production          # mock: codes are shown on the form (staging only)
 npx vercel env add CRON_SECRET production       # lets the cron call /api/payload-jobs/run
+npx vercel blob create-store sdg-media --access public --region bom1 --yes   # uploads; adds BLOB_READ_WRITE_TOKEN
 npx vercel deploy --prod
-DATABASE_URL=... PAYLOAD_SECRET=... npm run seed  # once, from your machine, to load the approved content
+# once per content version, from your machine, so the seed's images land in the Blob store, not on your disk
+DATABASE_URL=... PAYLOAD_SECRET=... MEDIA_STORAGE=vercel-blob BLOB_READ_WRITE_TOKEN=... npm run seed
 ```
 
-Known staging limits: uploads need `S3_BUCKET` (Vercel's filesystem is read-only), mock OTP must never be used
-for real customers, and `NEXT_PUBLIC_SERVER_URL` falls back to the Vercel production URL when unset.
+Uploads on the staging hosts go to a Vercel Blob store (Vercel's and Render's filesystems are read-only): on Vercel
+the token alone switches it on; on Render (and for a seed run from your machine) set `MEDIA_STORAGE=vercel-blob` too.
+Production stays on S3 (`S3_BUCKET` wins). Other staging limits: mock OTP must never be used for real customers, and
+`NEXT_PUBLIC_SERVER_URL` falls back to the Vercel production URL when unset.
+
+Render runs the same Docker image from the GitHub mirror (`render.yaml`, branch `salman`, auto-deploy): pushing that
+branch to GitHub deploys it. Azure DevOps (`origin`) stays the source of truth; push there first, then mirror:
+
+```bash
+git push origin salman
+git push github salman
+```
 
 ## Not yet built (tracked for the sprints)
 
 PDF text extraction for documents (paste the text into the admin for now), the approved proposal PDF on
 letterhead (the space designer produces the indicative on-screen version), Microsoft Graph calendar
 booking (the scheduler records the requested slot as an enquiry and the consultant confirms it),
-Entra ID sign-in for staff, CV upload on careers applications (CVs go by email), CloudFront in front
-of S3, and admin branding. Sample posts, roles and testimonials are seeded with `sample: true` and show
-a "Sample" chip until marketing replaces them.
+Entra ID sign-in for staff, CV upload on careers applications (CVs go by email), and CloudFront in front
+of S3. The seed carries no placeholder content any more: posts, roles and testimonials come only from the
+admin (a record ticked `sample` still shows a "Sample" chip).

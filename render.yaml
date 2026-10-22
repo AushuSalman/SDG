@@ -27,3 +27,7 @@ services:
         value: mock
       - key: PAYLOAD_JOBS_AUTORUN
         value: "true"
+      - key: MEDIA_STORAGE
+        value: vercel-blob # uploads go to the Vercel Blob store shared with the Vercel project
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false        # the Blob store token from the Vercel project env
