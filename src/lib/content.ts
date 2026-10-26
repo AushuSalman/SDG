@@ -27,7 +27,7 @@ export const mediaList = (items: unknown): { id: string; src: string; alt: strin
   (Array.isArray(items) ? items : [])
     .map((m) => (m && typeof m === 'object' ? (m as { id?: string | number; url?: string | null; alt?: string | null; sizes?: Record<string, { url?: string | null }> }) : null))
     .filter((m): m is NonNullable<typeof m> => Boolean(m?.url))
-    .map((m) => ({ id: String(m.id), src: m.sizes?.card?.url || m.url || '', alt: m.alt || '' }))
+    .map((m) => ({ id: String(m.id), src: localFileUrl(m.sizes?.card?.url || m.url) || '', alt: m.alt || '' }))
 
 export async function getProjects(opts: { business?: string; status?: string; category?: string; limit?: number } = {}): Promise<Project[]> {
   const payload = await getPayloadClient()
@@ -126,11 +126,27 @@ export async function getPartners(opts: { kind?: 'partner' | 'client'; business?
 /** Photo credit stored on the media record, when the photographer asked for one. */
 export const mediaCredit = (m: unknown): string | null => (m && typeof m === 'object' && 'credit' in m ? (m as { credit?: string | null }).credit || null : null)
 
+/**
+ * Payload prefixes upload URLs with the server URL once one is configured. Files it serves itself are better
+ * referenced by path: next/image accepts them as local files and the markup stays the same on every host.
+ * Addresses on other hosts (a CDN in front of S3) pass through unchanged.
+ */
+export const localFileUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null
+  if (!/^https?:\/\//i.test(url)) return url
+  try {
+    const u = new URL(url)
+    return /^\/api\/(media|documents)\/file\//.test(u.pathname) ? `${u.pathname}${u.search}` : url
+  } catch {
+    return url
+  }
+}
+
 export const mediaUrl = (m: unknown, size?: 'thumb' | 'card' | 'wide'): string | null => {
   if (!m || typeof m !== 'object') return null
   const media = m as { url?: string | null; sizes?: Record<string, { url?: string | null }> }
-  if (size && media.sizes?.[size]?.url) return media.sizes[size].url || null
-  return media.url || null
+  if (size && media.sizes?.[size]?.url) return localFileUrl(media.sizes[size].url)
+  return localFileUrl(media.url)
 }
 
 const FALLBACK: Record<string, string> = { residential: '/img/residential.webp', commercial: '/img/commercial.webp' }

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 
+import { clientIp, tooMany } from '@/lib/api'
 import { slotsFromHours } from '@/lib/hours'
 import { busySlots, busyTimes, calendarConfigured, refreshTokens } from '@/lib/integrations/graph'
 import { getPayloadClient } from '@/lib/payload'
+import { LIMITS, rateLimit } from '@/lib/ratelimit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -23,6 +25,8 @@ export async function GET(req: Request) {
   if (span < 0 || span > 14) return NextResponse.json({ ok: false, error: 'Range must be 0 to 14 days' }, { status: 400 })
   try {
     const payload = await getPayloadClient()
+    const limit = await rateLimit(payload, { bucket: 'calendar-busy', id: clientIp(req), ...LIMITS.calendarBusy })
+    if (!limit.ok) return tooMany(limit.retryAfterSeconds)
     const consultant = await payload.findByID({ collection: 'consultants', id: consultantId, depth: 0, overrideAccess: true })
     const refresh = consultant.calendar?.refreshToken
     if (!calendarConfigured() || !refresh) return NextResponse.json({ ok: true, connected: false, busy: [] })

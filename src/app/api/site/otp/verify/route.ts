@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { PORTAL_COOKIE, errorResponse } from '@/lib/api'
+import { PORTAL_COOKIE, clientIp, errorResponse, tooMany } from '@/lib/api'
 import { signVerification, verifyOtp } from '@/lib/otp'
 import { getPayloadClient } from '@/lib/payload'
+import { LIMITS, rateLimit } from '@/lib/ratelimit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,8 @@ export async function POST(req: Request) {
   try {
     const body = Body.parse(await req.json())
     const payload = await getPayloadClient()
+    const limit = await rateLimit(payload, { bucket: 'otp-verify', id: clientIp(req), ...LIMITS.otpVerify })
+    if (!limit.ok) return tooMany(limit.retryAfterSeconds)
     const { phone } = await verifyOtp(payload, body)
     if (body.purpose === 'portal') {
       const token = await signVerification(phone, 'portal', '7d')

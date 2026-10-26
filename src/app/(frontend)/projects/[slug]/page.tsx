@@ -1,4 +1,3 @@
-import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -8,6 +7,7 @@ import React from 'react'
 import { DecisionTools } from '@/components/project/DecisionTools'
 import { ProjectGallery } from '@/components/project/ProjectGallery'
 import { ProjectTabs } from '@/components/project/ProjectTabs'
+import { SafeRichText } from '@/components/SafeRichText'
 import { AskAiButton, BookVisitButton, BrochureButton, ShareButton } from '@/components/ui/actions'
 import { CATEGORY_LABEL, STATUS_LABEL, getFaqs, getProjectBySlug, getProjects, mediaCredit, mediaUrl, priceBand, projectImage } from '@/lib/content'
 
@@ -87,7 +87,7 @@ export default async function ProjectPage({ params }: { params: Params }) {
             specs: specRows, highlights: (project.highlights || []).map((h) => h.text), faqs: faqs.map((f) => ({ q: f.question, a: f.answer })), brochureUrl,
           }} />
           {project.summary && <p className="lede" style={{ marginTop: 20, fontSize: 15.5 }}>{project.summary}</p>}
-          {project.description && <div className="prose" style={{ marginTop: 16 }}><RichText data={project.description} /></div>}
+          {project.description && <div className="prose" style={{ marginTop: 16 }}><SafeRichText data={project.description} /></div>}
 
           {res ? (
             <DecisionTools name={project.name} slug={project.slug} priceFromLakh={project.pricing?.from} configurations={configs} />

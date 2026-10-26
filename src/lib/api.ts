@@ -19,4 +19,27 @@ export function errorResponse(err: unknown): NextResponse {
   return NextResponse.json({ ok: false, error: 'Something went wrong. Please try again.' }, { status: 500 })
 }
 
+/** 429 for the public routes once a caller has used up its window (see src/lib/ratelimit.ts). */
+export function tooMany(retryAfterSeconds: number): NextResponse {
+  const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60))
+  return NextResponse.json(
+    { ok: false, error: `Too many requests. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.` },
+    { status: 429, headers: { 'Retry-After': String(retryAfterSeconds), 'Cache-Control': 'no-store' } },
+  )
+}
+
+/** True when the browser says the request came from this site itself (Fetch Metadata, with Origin as fallback). */
+export function sameOrigin(req: Request): boolean {
+  const site = req.headers.get('sec-fetch-site')
+  if (site) return site === 'same-origin'
+  const origin = req.headers.get('origin')
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
+  if (!origin || !host) return false
+  try {
+    return new URL(origin).host === host
+  } catch {
+    return false
+  }
+}
+
 export const PORTAL_COOKIE = 'sdg_portal'

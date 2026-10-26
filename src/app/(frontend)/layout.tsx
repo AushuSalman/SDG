@@ -49,7 +49,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
         <meta name="theme-color" content="#101F3C" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+        {/* "<" is escaped so a value typed into Site settings can never close this script tag. */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, '\\u003c') }} />
       </head>
       <body>
         <UiProvider projects={options} hoursText={settings.hoursText || 'Mon–Sat, 09:30 – 18:30 IST'} whatsapp={settings.whatsapp || '914040001978'} visitSlots={slotsFromHours(settings.consultHours?.from, settings.consultHours?.to)}>

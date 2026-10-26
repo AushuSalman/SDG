@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { errorResponse } from '@/lib/api'
+import { clientIp, errorResponse, tooMany } from '@/lib/api'
 import { normalizePhone, readVerification } from '@/lib/otp'
 import { getPayloadClient } from '@/lib/payload'
+import { LIMITS, rateLimit } from '@/lib/ratelimit'
 import type { Enquiry } from '@/payload-types'
 
 type Channel = NonNullable<NonNullable<Enquiry['source']>['channel']>
@@ -62,6 +63,8 @@ export async function POST(req: Request) {
   try {
     const body = Body.parse(await req.json())
     const payload = await getPayloadClient()
+    const limit = await rateLimit(payload, { bucket: 'enquire', id: clientIp(req), ...LIMITS.enquire })
+    if (!limit.ok) return tooMany(limit.retryAfterSeconds)
     const phone = normalizePhone(body.phone)
     const verified = await readVerification(body.token)
     const otpVerified = Boolean(verified && verified.purpose === 'enquiry' && verified.phone === phone)

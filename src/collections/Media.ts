@@ -13,7 +13,8 @@ export const Media: CollectionConfig = {
     delete: canEditContent,
   },
   upload: {
-    mimeTypes: ['image/*'],
+    // Raster formats only: an SVG can carry scripts, and the site has no use for one.
+    mimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'],
     imageSizes: [
       { name: 'thumb', width: 480, height: 320, position: 'centre' },
       { name: 'card', width: 960, height: 640, position: 'centre' },

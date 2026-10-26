@@ -33,6 +33,9 @@ export const Users: CollectionConfig = {
     tokenExpiration: 60 * 60 * 8,
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,
+    // The session cookie never travels over plain http in production (a production build served on plain
+    // http://localhost, as in a local smoke test, is the one exception) and is not sent on cross-site requests.
+    cookies: { secure: process.env.NODE_ENV === 'production' && !/^http:\/\/(localhost|127\.0\.0\.1)/.test(process.env.NEXT_PUBLIC_SERVER_URL || ''), sameSite: 'Lax' },
   },
   access: {
     admin: ({ req }) => Boolean(req.user),

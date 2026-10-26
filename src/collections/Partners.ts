@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { canEditContent } from '@/lib/access'
+import { isHttpUrl } from '@/lib/validate'
 
 /** Partner categories and named partners on the Partnerships page, grouped by business. */
 export const Partners: CollectionConfig = {
@@ -47,7 +48,7 @@ export const Partners: CollectionConfig = {
       },
       { name: 'summary', type: 'text', admin: { description: 'One line, e.g. Leading banks and HFCs' } },
     ] },
-    { name: 'url', type: 'text', label: 'Website', admin: { description: 'Optional link to the partner' } },
+    { name: 'url', type: 'text', label: 'Website', validate: isHttpUrl, admin: { description: 'Optional link to the partner' } },
     { name: 'logo', type: 'upload', relationTo: 'media', admin: { description: 'Shown beside the name on the Partnerships page and as the tile in a client logo strip' } },
     { type: 'row', fields: [
       { name: 'active', type: 'checkbox', defaultValue: true },

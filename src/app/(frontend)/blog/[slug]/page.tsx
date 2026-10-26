@@ -1,10 +1,10 @@
-import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
+import { SafeRichText } from '@/components/SafeRichText'
 import { ShareButton } from '@/components/ui/actions'
 import { BUSINESS_LABEL, getPostBySlug, mediaUrl } from '@/lib/content'
 import { tagList } from '@/lib/richtext'
@@ -36,7 +36,7 @@ export default async function PostPage({ params }: { params: Params }) {
       <section className="co-section" style={{ paddingTop: 10 }}>
         <div className="ph" style={{ aspectRatio: '21 / 9', marginBottom: 28 }}><Image src={mediaUrl(post.cover, 'wide') || COVER[post.business || 'group']} alt="" width={1600} height={686} priority /></div>
         <div className="prose">
-          {post.body && <RichText data={post.body} />}
+          {post.body && <SafeRichText data={post.body} />}
         </div>
         {tags.length > 0 && (
           <div className="ptags" style={{ marginTop: 24 }}>

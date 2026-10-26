@@ -38,6 +38,11 @@ async function main() {
   const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!'
   const users = await countReal('users')
   if (users.totalDocs === 0) {
+    // The well-known default password is for the throwaway local database only.
+    const localDb = /^mongodb:\/\/(127\.0\.0\.1|localhost)[:/]/.test(process.env.DATABASE_URL || '')
+    if (!process.env.SEED_ADMIN_PASSWORD && (!localDb || process.env.NODE_ENV === 'production')) {
+      throw new Error('Refusing to create the first admin with the default password on a non-local database. Set SEED_ADMIN_PASSWORD (and SEED_ADMIN_EMAIL) and run the seed again.')
+    }
     await payload.create({ collection: 'users', overrideAccess: true, data: { email: adminEmail, password: adminPassword, name: 'SDG Super Admin', role: 'super-admin', business: 'group' } })
     log(`super admin created: ${adminEmail}`)
   }

@@ -157,6 +157,29 @@ git push origin salman
 git push github salman
 ```
 
+## Security
+
+- **Secrets** live only in the host's environment (`.env*` is ignored by git, Docker and the Vercel CLI; the repo
+  carries `.env.example` with placeholders). `PAYLOAD_SECRET` must be 32+ random characters and `CRON_SECRET`
+  guards the job runner. Rotate any key that was ever pasted into a chat or ticket.
+- **Admin and API.** Every collection and global declares who may read, create, update and delete (`src/lib/access.ts`);
+  public visitors only see published, approved or active records, and customer data (enquiries, customers, chats,
+  consultants) needs a staff login. Accounts lock for 10 minutes after 5 wrong passwords; the session cookie is
+  `Secure` in production and `SameSite=Lax`; cookie-authenticated requests must come from the site's own origin
+  (`cors`/`csrf` in `payload.config.ts`); GraphQL is disabled.
+- **Rate limits.** The public routes (enquiry, OTP send and verify, assistant, scheduler availability) share a
+  database-backed per-address window (`src/lib/ratelimit.ts`, 429 with `Retry-After`); staff sign-in endpoints get
+  an in-memory per-address window in `src/proxy.ts`; OTP codes are additionally capped per number and per address.
+- **Input and output.** Every route validates its body with zod and bounded lengths; React escapes all output;
+  rich text links and admin-entered URLs are restricted to web addresses (`src/lib/validate.ts`); uploads are
+  raster images and documents only, 25 MB at most; the JSON-LD block escapes `<`.
+- **Headers.** `next.config.ts` sends a Content Security Policy (own origin, Google Fonts, Maps and YouTube
+  frames, nothing may frame the site), `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy` and, in production, HSTS. `X-Powered-By` is off.
+- **Operations.** Run `npm audit` before each release; the seed refuses the default admin password on anything
+  but a local database; `OTP_MODE=mock` and `AI_MODE=mock` are for development and staging only; keep the Atlas
+  cluster on an IP allow-list or private endpoint.
+
 ## Not yet built (tracked for the sprints)
 
 PDF text extraction for documents (paste the text into the admin for now), the approved proposal PDF on

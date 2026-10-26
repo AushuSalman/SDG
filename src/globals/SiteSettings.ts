@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { canEditContent } from '@/lib/access'
+import { isHttpUrl } from '@/lib/validate'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -50,7 +51,7 @@ export const SiteSettings: GlobalConfig = {
     { name: 'social', type: 'array', label: 'Social links', admin: { description: 'Shown in the website footer' }, fields: [
       { type: 'row', fields: [
         { name: 'label', type: 'text', required: true },
-        { name: 'url', type: 'text', label: 'URL', required: true },
+        { name: 'url', type: 'text', label: 'URL', required: true, validate: isHttpUrl },
       ] },
     ] },
   ],

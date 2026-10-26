@@ -27,6 +27,7 @@ import { Users } from './collections/Users'
 import { SiteCopy } from './globals/SiteCopy'
 import { SiteSettings } from './globals/SiteSettings'
 import { tasks } from './jobs/tasks'
+import { RATE_LIMIT_COLLECTION } from './lib/ratelimit'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -62,8 +63,24 @@ const plugins: Plugin[] =
       ? [vercelBlobStorage({ collections: UPLOAD_COLLECTIONS, token: process.env.BLOB_READ_WRITE_TOKEN })]
       : []
 
+const serverURL =
+  process.env.NEXT_PUBLIC_SERVER_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : process.env.RENDER_EXTERNAL_URL || undefined)
+
+/**
+ * Browsers may call the API only from the site's own origin: no cross-origin reads, and cookie-authenticated requests
+ * must carry a matching Origin or Sec-Fetch-Site (Payload's CSRF check). Non-browser clients use the JWT header.
+ * In development the origin is the local dev server; in production it is the configured server URL.
+ */
+const ownOrigins = serverURL ? [serverURL] : process.env.NODE_ENV === 'production' ? [] : ['http://localhost:3000', 'http://127.0.0.1:3000']
+
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : process.env.RENDER_EXTERNAL_URL || undefined),
+  serverURL,
+  cors: ownOrigins,
+  csrf: ownOrigins,
+  // The site reads content through the local API and the admin uses REST, so GraphQL is pure attack surface.
+  graphQL: { disable: true },
+  upload: { limits: { fileSize: 25 * 1024 * 1024 } },
   admin: {
     user: Users.slug,
     // One light theme in the brand colours, no dark-mode toggle: the admin is for non-technical staff (SOW §4.1).
@@ -123,12 +140,26 @@ export default buildConfig({
     },
   },
   onInit: async (payload) => {
+    if (process.env.NODE_ENV === 'production' && !serverURL) {
+      payload.logger.warn('NEXT_PUBLIC_SERVER_URL is not set: cookie-authenticated requests are not checked against the site origin')
+    }
+    if (process.env.NODE_ENV === 'production' && (process.env.PAYLOAD_SECRET || '').length < 32) {
+      payload.logger.warn('PAYLOAD_SECRET is shorter than 32 characters; use a long random value')
+    }
     // TTL index: expired OTP rows disappear on their own, which is why there is no Redis.
     try {
       const otps = (payload.db as unknown as { collections?: Record<string, { collection: { createIndex: (k: object, o: object) => Promise<unknown> } }> }).collections?.otps
       await otps?.collection.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 })
     } catch (err) {
       payload.logger.warn(`OTP TTL index not created: ${String(err)}`)
+    }
+    // Rate-limit windows (src/lib/ratelimit.ts): one row per caller and window, unique key, removed by TTL.
+    try {
+      const conn = (payload.db as unknown as { connection?: { collection: (n: string) => { createIndex: (k: object, o?: object) => Promise<unknown> } } }).connection
+      await conn?.collection(RATE_LIMIT_COLLECTION).createIndex({ key: 1 }, { unique: true })
+      await conn?.collection(RATE_LIMIT_COLLECTION).createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 })
+    } catch (err) {
+      payload.logger.warn(`Rate-limit indexes not created: ${String(err)}`)
     }
     // One retention sweep a day, queued if none is waiting.
     try {

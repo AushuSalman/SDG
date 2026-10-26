@@ -3,6 +3,7 @@ import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 import { canEditContent, publishedOrStaff } from '@/lib/access'
 import { tidyRichText, type RichTextDoc } from '@/lib/richtext'
 import { formatSlug } from '@/lib/slug'
+import { isHttpUrl } from '@/lib/validate'
 import { restrictPublish } from './Projects'
 
 /** A plain-text paste becomes headings and lists on save; Author, Tags and Reading time lines at its top fill the fields. */
@@ -57,7 +58,7 @@ export const Posts: CollectionConfig = {
       { name: 'tags', type: 'text', admin: { description: 'Comma-separated; shown under the article' } },
     ] },
     { type: 'row', fields: [
-      { name: 'externalUrl', type: 'text', label: 'External article link', admin: { description: 'For press coverage: the card links to this address and no page is made here' } },
+      { name: 'externalUrl', type: 'text', label: 'External article link', validate: isHttpUrl, admin: { description: 'For press coverage: the card links to this address and no page is made here' } },
       { name: 'source', type: 'text', label: 'Publication', admin: { description: 'e.g. Deccan Chronicle; shown on the card for press coverage' } },
     ] },
     { name: 'cover', type: 'upload', relationTo: 'media', label: 'Cover image' },

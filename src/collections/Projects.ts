@@ -2,6 +2,7 @@ import { APIError, type CollectionBeforeChangeHook, type CollectionConfig } from
 
 import { canEditContent, canPublish, publishedOrStaff } from '@/lib/access'
 import { formatSlug } from '@/lib/slug'
+import { isHttpUrl } from '@/lib/validate'
 
 /** Only Management or Super Admin may publish (SOW §6.3). Drafts are open to content roles. */
 export const restrictPublish: CollectionBeforeChangeHook = ({ data, originalDoc, req }) => {
@@ -136,7 +137,7 @@ export const Projects: CollectionConfig = {
     { name: 'gallery', type: 'upload', relationTo: 'media', hasMany: true },
     { name: 'floorPlans', type: 'upload', relationTo: 'media', hasMany: true },
     { name: 'brochure', type: 'relationship', relationTo: 'documents' },
-    { name: 'videoUrl', type: 'text', label: 'Video URL', admin: { description: 'YouTube link from the SDG channel' } },
+    { name: 'videoUrl', type: 'text', label: 'Video URL', validate: isHttpUrl, admin: { description: 'YouTube link from the SDG channel' } },
     {
       name: 'pricing',
       type: 'group',

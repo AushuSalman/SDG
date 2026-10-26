@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
 import { runChat } from '@/lib/ai/chat'
-import { errorResponse } from '@/lib/api'
+import { clientIp, errorResponse, tooMany } from '@/lib/api'
 import { getPayloadClient } from '@/lib/payload'
+import { LIMITS, rateLimit } from '@/lib/ratelimit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,6 +27,11 @@ export async function POST(req: Request) {
   try {
     const body = Body.parse(await req.json())
     const payload = await getPayloadClient()
+    // Per address and per conversation: the assistant costs money per answer.
+    const byIp = await rateLimit(payload, { bucket: 'chat', id: clientIp(req), ...LIMITS.chat })
+    if (!byIp.ok) return tooMany(byIp.retryAfterSeconds)
+    const bySession = await rateLimit(payload, { bucket: 'chat-session', id: body.sessionId, ...LIMITS.chatSession })
+    if (!bySession.ok) return tooMany(bySession.retryAfterSeconds)
     const result = await runChat(payload, body)
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
