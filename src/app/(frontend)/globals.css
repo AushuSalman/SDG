@@ -3,9 +3,10 @@
 /* SDG design tokens: the Refined skin. Source: docs/sdg-design-tokens.md and the final rendered state of
    sdg-wireframe-refined.html (navy and brass on cream, Fraunces headlines, Inter body, pill buttons). */
 @theme {
-  --color-ground: #F7F3EA;
+  --color-ground: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-surface-2: #FBF8F1;
+  --color-surface-2: #F4F5F7;
+  --color-card: #FFFFFF;
   --color-sand: #EEE6D4;
   --color-line: #E7E1D5;
   --color-rule: #E6DDCB;
@@ -29,7 +30,8 @@
 }
 
 :root {
-  --ground: #F7F3EA; --surface: #FFFFFF; --cream2: #FBF8F1; --sand: #EEE6D4; --line: #E7E1D5; --rule: #E6DDCB;
+  /* White ground since 26 Oct 2026 (was cream #F7F3EA). Cards are white with a hairline border; --cream2 is now a neutral light grey for hover, selected and callout states. */
+  --ground: #FFFFFF; --surface: #FFFFFF; --card: #FFFFFF; --cream2: #F4F5F7; --sand: #EEE6D4; --line: #E7E1D5; --rule: #E6DDCB;
   --ink: #101F3C; --ink2: #2E3A50; --muted: #56647C; --note: #7A8294;
   --navy: #101F3C; --navy2: #0E2340; --navy-h: #17294C;
   --gold: #C9A14A; --gold2: #D8B45C; --ongold: #1E1703; --au-text: #8A6410; --au-head: #B07D0E; --au: #C79A2E; --brass: #B8893A; --soft: #F6ECD2;
@@ -176,7 +178,7 @@ nav.main a[aria-current="page"], .navtrigger.current { color: var(--ink); box-sh
 .navmenu { position: absolute; left: 0; top: 100%; margin-top: 6px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 0; min-width: 190px; box-shadow: 0 14px 30px rgba(16, 31, 60, .14); display: none; z-index: 40; }
 .navdrop.open .navmenu { display: block; animation: view-in .18s ease; }
 .navmenu a { display: block; padding: 9px 16px; font-size: 14.5px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
-.navmenu a:hover { background: var(--ground); color: var(--ink); }
+.navmenu a:hover { background: var(--cream2); color: var(--ink); }
 .hdr-icon { background: none; border: 0; cursor: pointer; color: var(--au-head); width: 26px; height: 26px; margin-left: 8px; padding: 4px; display: inline-grid; place-items: center; transition: color .15s ease; }
 .hdr-icon:hover { color: var(--ink); }
 .hdr-icon svg { width: 100%; height: 100%; }
@@ -238,7 +240,7 @@ footer.site-foot .legal { border-top: 1px solid rgba(255, 255, 255, .12); margin
 @keyframes drawer-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .drawer.min { height: auto; }
 .drawer.min > :not(header) { display: none; }
-.drawer > header { padding: 14px 16px; display: flex; align-items: center; gap: 10px; background: var(--surface); }
+.drawer > header { padding: 14px 16px; display: flex; align-items: center; gap: 10px; background: var(--cream2); }
 .drawer > header strong { color: var(--ink); font-size: 15.5px; font-weight: 700; }
 .drawer > header .x { margin-left: auto; border: 0; background: none; font-size: 20px; cursor: pointer; color: var(--muted); line-height: 1; padding: 0 4px; }
 .drawer > header .x + .x { margin-left: 0; }
@@ -246,10 +248,10 @@ footer.site-foot .legal { border-top: 1px solid rgba(255, 255, 255, .12); margin
 .langs { display: flex; gap: 4px; }
 .langs button { border: 1px solid var(--line); background: none; border-radius: 4px; font-size: 12px; padding: 2px 6px; cursor: pointer; color: var(--ink); }
 .langs button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
-.drawer .ai-notice { font-size: 11.5px; color: var(--muted); background: var(--surface); padding: 8px 16px; }
+.drawer .ai-notice { font-size: 11.5px; color: var(--muted); background: var(--cream2); padding: 8px 16px; }
 .msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .m { max-width: 88%; padding: 10px 12px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
-.m.bot { background: var(--surface); align-self: flex-start; }
+.m.bot { background: var(--cream2); align-self: flex-start; }
 .m.me { background: var(--navy); color: #fff; align-self: flex-end; }
 .m .src { display: block; margin-top: 6px; font-family: var(--mono); font-size: 11px; color: var(--muted); text-decoration: none; }
 .m.esc { background: var(--warn-soft); border: 1px solid rgba(160, 70, 14, .4); }
@@ -267,7 +269,7 @@ footer.site-foot .legal { border-top: 1px solid rgba(255, 255, 255, .12); margin
 .sugg button { border: 0; background: none; border-radius: 999px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; color: var(--au-head); transition: background .15s ease; }
 .sugg button:hover { background: var(--soft); }
 .drawer form { display: flex; gap: 8px; padding: 12px 16px; align-items: center; }
-.drawer form input { flex: 1; border: 0; border-radius: 6px; padding: 8px 10px; background: var(--surface); min-width: 0; font-size: 15.5px; }
+.drawer form input { flex: 1; border: 0; border-radius: 6px; padding: 8px 10px; background: var(--cream2); min-width: 0; font-size: 15.5px; }
 .drawer form input:focus { outline: 2px solid var(--line); outline-offset: 1px; }
 .drawer .ai-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 16px 10px; font-size: 12px; color: var(--muted); }
 .drawer .ai-foot button { border: 0; background: transparent; color: var(--au-text); font-weight: 700; font-family: inherit; font-size: 13px; cursor: pointer; padding: 4px 0; }

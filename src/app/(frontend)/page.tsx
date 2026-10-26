@@ -50,7 +50,7 @@ export default async function HomePage() {
     <>
       <section className="trio">
         <div className="trio-art">
-          <Image src="/img/art-trio.webp" alt="Homes, paper manufacturing and glass recycling as three sculptural scenes" width={1920} height={881} priority className="h-auto w-full" />
+          <Image src="/img/art-trio-white.webp" alt="Homes, paper manufacturing and glass recycling as three sculptural scenes" width={1920} height={881} priority className="h-auto w-full" />
           <div className="trio-copy">
             <h1>{line1}{line2 && <><br />{line2}</>}</h1>
             <p>Constructions. Paper. Glass bottles. Since {since}.</p>
