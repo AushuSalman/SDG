@@ -100,7 +100,7 @@ export function EnquiryForm(props: { business: Business; projectSlug?: string; p
       <div className="card" id="enquire">
         <p className="eyebrow" style={kick}>Thank you</p>
         <h3 style={{ marginTop: 8 }}>We have your enquiry, {str('name').split(' ')[0]}.</h3>
-        <p className="lede" style={{ fontSize: 15, marginTop: 8, color: props.dark ? '#C3CCDC' : undefined }}>An SDG consultant calls you on {str('phone')} within working hours. You can track this enquiry any time in <Link className="plainlink" href="/portal">your portal</Link>.</p>
+        <p className="lede" style={{ fontSize: 'var(--fs-small)', marginTop: 8, color: props.dark ? '#C3CCDC' : undefined }}>An SDG consultant calls you on {str('phone')} within working hours. You can track this enquiry any time in <Link className="plainlink" href="/portal">your portal</Link>.</p>
       </div>
     )
   }
@@ -119,7 +119,7 @@ export function EnquiryForm(props: { business: Business; projectSlug?: string; p
   const isRe = business === 'construction'
   return (
     <form id="enquire" onSubmit={submitForm} className="trade-form" aria-label={props.title || 'Enquiry form'} noValidate>
-      {props.title && <div className="full"><p className="eyebrow" style={kick}>Enquire</p><h3 style={{ marginTop: 8, fontSize: 19 }}>{props.title}</h3></div>}
+      {props.title && <div className="full"><p className="eyebrow" style={kick}>Enquire</p><h3 style={{ marginTop: 8, fontSize: 'var(--fs-h4)' }}>{props.title}</h3></div>}
 
       {isRe && (
         <>

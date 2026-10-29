@@ -17,7 +17,7 @@ export default async function ProposalPage() {
         <h1>Configure your<br /><em>office requirement.</em></h1>
         <p className="lede">A guided configurator over SDG-defined options. The output is an indicative, watermarked proposal. A binding proposal needs an SDG representative&apos;s approval.</p>
       </section>
-      <section className="co-section" style={{ paddingTop: 0 }}><SpaceDesigner buildings={buildings} /></section>
+      <section className="co-section" style={{ paddingTop: 0 }}><h2 className="sr">Proposal builder</h2><SpaceDesigner buildings={buildings} /></section>
     </div>
   )
 }

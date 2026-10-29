@@ -34,7 +34,7 @@ export function DeliveryMap({ items }: { items: MapItem[] }) {
           <div className="card">
             <span className="eyebrow" style={{ color: COLOR[cur.business] }}>{cur.business}</span>
             <h3 style={{ margin: '6px 0 4px' }}>{cur.name}</h3>
-            <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 12px' }}>{cur.loc} · {cur.desc}</p>
+            <p style={{ color: 'var(--muted)', fontSize: 'var(--fs-small)', margin: '0 0 12px' }}>{cur.loc} · {cur.desc}</p>
             <div className="btn-row">
               <Link className="btn accent sm" href={cur.href}>Open page</Link>
               <a className="btn ghost sm" href={`https://www.google.com/maps/search/${encodeURIComponent(cur.query)}`} target="_blank" rel="noopener">Directions</a>

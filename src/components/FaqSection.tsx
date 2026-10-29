@@ -12,7 +12,7 @@ export function FaqSection({ faqs, title, kicker = 'Questions', kickClass = 'co-
     <div className="faq-sec">
       <p className={kickClass}>{kicker}</p>
       <h2>{title}</h2>
-      {intro && <p className="lede" style={{ margin: '8px 0 18px', fontSize: 15.5 }}>{intro}</p>}
+      {intro && <p className="lede" style={{ margin: '8px 0 18px', fontSize: 'var(--fs-small)' }}>{intro}</p>}
       <div className="faq-list" style={{ marginTop: intro ? 0 : 18 }}>
         {faqs.map((f) => (
           <details key={f.id}>

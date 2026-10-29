@@ -75,7 +75,7 @@ export default async function RealEstatePage() {
                 <Link key={p.slug} className="re-lease" href={`/projects/${p.slug}`}>
                   <span className="re-lease-img"><Image src={projectImage(p, 'card')} alt="" width={960} height={640} /></span>
                   <span className="re-lease-copy">
-                    <span className="eyebrow">{p.location}{p.rera ? ` · RERA ${p.rera}` : ''}</span>
+                    <span className="eyebrow plain">{p.location}{p.rera ? ` · RERA ${p.rera}` : ''}</span>
                     <h2>{p.name}</h2>
                     {p.tagline && <p>{p.tagline}</p>}
                     <ul>

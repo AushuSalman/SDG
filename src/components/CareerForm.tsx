@@ -28,7 +28,7 @@ export function CareerForm({ role }: { role?: string }) {
       ui.toast('Application received. HR comes back to you by email or phone.', 5000)
     } catch (x) { setErr((x as Error).message) } finally { setBusy(false) }
   }
-  if (done) return <div className="card"><p className="eyebrow">Received</p><h3 style={{ marginTop: 8 }}>Thank you, {f.name.split(' ')[0]}.</h3><p className="lede" style={{ fontSize: 15, marginTop: 8 }}>Your application is with HR. Send your CV to careers@sdg.in quoting your name and the area you applied for.</p></div>
+  if (done) return <div className="card"><p className="eyebrow">Received</p><h3 style={{ marginTop: 8 }}>Thank you, {f.name.split(' ')[0]}.</h3><p className="lede" style={{ fontSize: 'var(--fs-small)', marginTop: 8 }}>Your application is with HR. Send your CV to careers@sdg.in quoting your name and the area you applied for.</p></div>
   return (
     <form className="card" id="apply" onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <h3>Apply</h3>

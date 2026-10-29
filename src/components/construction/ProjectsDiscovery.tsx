@@ -57,7 +57,7 @@ export function ProjectsDiscovery({ projects }: { projects: PdProject[] }) {
             <article className="pd-card" key={p.slug}>
               <Link className="pd-img" href={`/projects/${p.slug}`}><Image src={p.img} alt="" width={960} height={600} /><span className="tag">{cap(p.status)}</span></Link>
               <div className="pd-body">
-                <span className="eyebrow">{cap(p.category)} · {p.location}</span>
+                <span className="eyebrow plain">{cap(p.category)} · {p.location}</span>
                 <h3><Link href={`/projects/${p.slug}`}>{p.name}</Link></h3>
                 <p>{p.summary}</p>
                 <dl className="pd-meta">

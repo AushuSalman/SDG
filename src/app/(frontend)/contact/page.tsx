@@ -28,10 +28,11 @@ export default async function ContactPage() {
               <div className="cline"><span className="ci"><IconPhone /></span><div><b>Call us</b><span><a href={`tel:${(settings.phone || '').replace(/[^+\d]/g, '')}`}>{settings.phone}</a></span></div></div>
               <div className="cline"><span className="ci"><IconHeadset /></span><div><b>Reach us</b><span><a href={`mailto:${settings.email}`}>{settings.email}</a></span></div></div>
               <div className="cline"><span className="ci"><IconCalendar /></span><div><b>Site visits</b><span>{settings.hoursText}</span></div></div>
-              <p style={{ fontSize: 14, color: 'var(--ink2)', whiteSpace: 'pre-line' }}>{settings.headOffice}</p>
+              <p style={{ fontSize: 'var(--fs-small)', color: 'var(--ink2)', whiteSpace: 'pre-line' }}>{settings.headOffice}</p>
             </div>
           </div>
           <div className="card">
+            <h2 className="sr">Contact options</h2>
             <h3 style={{ marginBottom: 10 }}>Per-business desks</h3>
             <div className="mlist" style={{ margin: 0 }}>
               {consultants.map((c, i) => <div key={c.id}><span>0{i + 1}</span><b>{c.name} · {c.businesses.map((b) => BUSINESS_LABEL[b]).join(', ')}{c.phone ? ` · ${c.phone}` : ''}</b></div>)}

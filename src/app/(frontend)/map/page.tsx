@@ -24,7 +24,7 @@ export default async function MapPage() {
         <h1>Where SDG<br /><em>builds and makes.</em></h1>
         <p className="lede">Projects, the paper mill, the bottle warehouses and the head office, across the Group. Pick a location for details and a live map.</p>
       </section>
-      <section className="co-section" style={{ paddingTop: 20 }}><DeliveryMap items={items} /></section>
+      <section className="co-section" style={{ paddingTop: 20 }}><h2 className="sr">Project map</h2><DeliveryMap items={items} /></section>
     </div>
   )
 }

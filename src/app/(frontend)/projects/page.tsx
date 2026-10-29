@@ -26,6 +26,7 @@ export default async function ProjectsPage() {
         <p className="lede">Every SDG project, past, current and upcoming, with configurations, possession targets and RERA details. Filter, sort, or see them on the map.</p>
       </section>
       <section className="co-section" style={{ paddingTop: 20 }}>
+        <h2 className="sr">Project list</h2>
         <ProjectsDiscovery projects={data} />
       </section>
     </div>

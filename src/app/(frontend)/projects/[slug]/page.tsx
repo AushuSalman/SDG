@@ -66,6 +66,7 @@ export default async function ProjectPage({ params }: { params: Params }) {
           </div>
           <div className="card">
             <dl className="kv">
+              <dt>Location</dt><dd>{[project.location, project.address].filter(Boolean).join(', ')}</dd>
               <dt>Status</dt><dd>{STATUS_LABEL[project.status]}{project.possession ? ` · possession ${project.possession}` : ''}</dd>
               <dt>Developer</dt><dd>{project.sdgRole === 'partner' ? 'SDG partner project' : 'SDG'}</dd>
               {cfgSummary && <><dt>{res ? 'Configurations' : 'Space'}</dt><dd>{cfgSummary}</dd></>}
@@ -86,9 +87,10 @@ export default async function ProjectPage({ params }: { params: Params }) {
             floorPlans: (project.floorPlans || []).map((f, i) => ({ src: mediaUrl(f, 'wide') || '', alt: `${project.name} floor plan ${i + 1}` })).filter((f) => f.src),
             specs: specRows, highlights: (project.highlights || []).map((h) => h.text), faqs: faqs.map((f) => ({ q: f.question, a: f.answer })), brochureUrl,
           }} />
-          {project.summary && <p className="lede" style={{ marginTop: 20, fontSize: 15.5 }}>{project.summary}</p>}
+          {project.summary && <p className="lede" style={{ marginTop: 20, fontSize: 'var(--fs-small)' }}>{project.summary}</p>}
           {project.description && <div className="prose" style={{ marginTop: 16 }}><SafeRichText data={project.description} /></div>}
 
+          <h2 className="sr">Decision tools</h2>
           {res ? (
             <DecisionTools name={project.name} slug={project.slug} priceFromLakh={project.pricing?.from} configurations={configs} />
           ) : (
@@ -121,8 +123,8 @@ export default async function ProjectPage({ params }: { params: Params }) {
         <aside className="proj-side">
           <div className="card">
             <span className="eyebrow">{res ? 'Indicative price' : 'Indicative rent'}</span>
-            <div className="emi num" style={{ fontSize: 26, marginTop: 6 }}>{price || 'On request'}</div>
-            <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: '6px 0 16px' }}>{project.possession ? `Possession ${project.possession}` : STATUS_LABEL[project.status]}{project.pricing?.note ? ` · ${project.pricing.note}` : ''}</p>
+            <div className="emi num" style={{ fontSize: 'var(--fs-h3)', marginTop: 6 }}>{price || 'On request'}</div>
+            <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)', margin: '6px 0 16px' }}>{project.possession ? `Possession ${project.possession}` : STATUS_LABEL[project.status]}{project.pricing?.note ? ` · ${project.pricing.note}` : ''}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <BookVisitButton project={project.slug}>Book a site visit</BookVisitButton>
               <Link className="btn ghost" href="/schedule?desk=construction">Schedule a call</Link>

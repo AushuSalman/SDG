@@ -117,7 +117,7 @@ export function PortalClient() {
         {tab === 'overview' && (
           <>
             <h3>{latest ? (latest.project?.name || nice(latest.business)) : 'Your journey with SDG'}</h3>
-            <p className="lede" style={{ fontSize: 14, marginBottom: 18 }}>{latest ? 'Stages sync from the CRM as your consultant updates them.' : 'No enquiries yet for this number. Start one on any project page.'}</p>
+            <p className="lede" style={{ fontSize: 'var(--fs-small)', marginBottom: 18 }}>{latest ? 'Stages sync from the CRM as your consultant updates them.' : 'No enquiries yet for this number. Start one on any project page.'}</p>
             {latest && (
               <ol className="stages">
                 {STAGES.map((s, i) => { const st = STAGE_OF[latest.status] ?? 0; return (
@@ -131,7 +131,7 @@ export function PortalClient() {
         {tab === 'enquiries' && (
           <>
             <h3>Enquiries</h3>
-            {d.enquiries.length === 0 ? <p className="lede" style={{ fontSize: 14 }}>No enquiries yet for this number.</p> : (
+            {d.enquiries.length === 0 ? <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>No enquiries yet for this number.</p> : (
               <table className="plain"><thead><tr><th>Date</th><th>Enquiry</th><th>Status</th><th>Consultant</th></tr></thead><tbody>
                 {d.enquiries.map((e) => <tr key={e.id}><td className="num">{when(e.createdAt)}</td><td>{e.project ? <Link className="plainlink" href={`/projects/${e.project.slug}`}>{e.project.name}</Link> : nice(e.business)} · {nice(e.type)}</td><td><span className={`state ${e.status === 'booked' ? 'ok' : ''}`}>{nice(e.status)}</span></td><td>{e.consultant?.name || 'Being allocated'}</td></tr>)}
               </tbody></table>
@@ -141,7 +141,7 @@ export function PortalClient() {
         {tab === 'visits' && (
           <>
             <h3>Visits</h3>
-            {visits.length === 0 ? <p className="lede" style={{ fontSize: 14 }}>No upcoming visits. <BookVisitButton className="plainlink">Book one</BookVisitButton>.</p> : visits.map((e) => (
+            {visits.length === 0 ? <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>No upcoming visits. <BookVisitButton className="plainlink">Book one</BookVisitButton>.</p> : visits.map((e) => (
               <div className="pt-note" key={e.id}><b>{e.project?.name || nice(e.business)}</b><br />{e.message || 'Site visit requested'}<br /><small style={{ color: 'var(--muted)' }}>Status: {nice(e.status)}{e.consultant ? ` · ${e.consultant.name}` : ''}</small></div>
             ))}
             <div className="btn-row" style={{ marginTop: 14 }}><BookVisitButton className="btn ghost sm">Book another visit</BookVisitButton><Link className="btn ghost sm" href="/schedule">Schedule a call</Link></div>
@@ -158,7 +158,7 @@ export function PortalClient() {
             <form className="trade-form" onSubmit={raiseTicket} noValidate style={{ marginTop: 18 }}>
               <div className="fld full"><label htmlFor="tkSub">Raise a ticket</label><input id="tkSub" placeholder="What is the problem?" value={ticket.subject} onChange={(e) => setTicket({ ...ticket, subject: e.target.value })} /></div>
               <div className="fld full"><label htmlFor="tkMsg">Details</label><textarea id="tkMsg" rows={2} value={ticket.details} onChange={(e) => setTicket({ ...ticket, details: e.target.value })} /></div>
-              <div className="foot"><button className="btn accent" type="submit">Submit</button><span style={{ fontSize: 13, color: 'var(--muted)' }}>Support replies within one business day.</span></div>
+              <div className="foot"><button className="btn accent" type="submit">Submit</button><span style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)' }}>Support replies within one business day.</span></div>
             </form>
           </>
         )}

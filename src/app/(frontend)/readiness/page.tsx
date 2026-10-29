@@ -19,6 +19,7 @@ export default async function ReadinessPage() {
       </section>
       <section className="co-section" style={{ paddingTop: 24 }}>
         <div className="grid g2" style={{ alignItems: 'start', gap: 32 }}>
+          <h2 className="sr">Readiness check</h2>
           <ReadinessWizard projects={data} />
           <div>
             <p className="co-kick">What happens next</p>

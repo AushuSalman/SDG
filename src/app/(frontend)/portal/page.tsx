@@ -14,7 +14,7 @@ export default function PortalPage() {
         <h1>Your journey<br /><em>with SDG.</em></h1>
         <p className="lede">Enquiries, visits, consultants and support in one place, from the first click. Sign in with the mobile number you enquired with.</p>
       </section>
-      <section className="co-section" style={{ paddingTop: 24 }}><PortalClient /></section>
+      <section className="co-section" style={{ paddingTop: 24 }}><h2 className="sr">Your portal</h2><PortalClient /></section>
     </div>
   )
 }

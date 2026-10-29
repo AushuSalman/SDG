@@ -20,6 +20,7 @@ export default async function PastProjectsPage() {
       </section>
       <section className="co-section" style={{ paddingTop: 20 }}>
         <CaseAsk placeholder="e.g. Which projects has SDG completed, and where?" />
+        <h2 className="sr">Completed projects</h2>
         <div className="grid g2" style={{ marginTop: 20 }}>
           {completed.length === 0 && <p className="lede">Completed projects appear here once they are published.</p>}
           {completed.map((p) => {
@@ -32,9 +33,9 @@ export default async function PastProjectsPage() {
             ].filter(Boolean).slice(0, 5) as string[]
             return (
               <article className="card case" key={p.id}>
-                <span className="eyebrow">{CATEGORY_LABEL[p.category]} · {p.location}{p.rera ? ` · RERA ${p.rera}` : ''}</span>
+                <span className="eyebrow plain">{CATEGORY_LABEL[p.category]} · {p.location}{p.rera ? ` · RERA ${p.rera}` : ''}</span>
                 <h3>{p.name}</h3>
-                {p.tagline && <p className="lede" style={{ fontSize: 15 }}>{p.tagline}</p>}
+                {p.tagline && <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>{p.tagline}</p>}
                 <ul>{facts.map((f) => <li key={f}>{f}</li>)}</ul>
                 <div className="btn-row" style={{ marginTop: 'auto' }}>
                   <AskAiButton className="btn ghost sm" question={`How was ${p.name} delivered, and who occupies it?`}>Ask about this</AskAiButton>

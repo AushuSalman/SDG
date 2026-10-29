@@ -77,7 +77,7 @@ export function BookingSheet({ pre, onClose }: { pre: BookingPrefill; onClose: (
       {step === 'slot' && (
         <form onSubmit={nextSlot} noValidate>
           <h3>Book a site visit</h3>
-          <p className="lede" style={{ fontSize: 14 }}>Request a visit with the Construction team. Visits {ui.hoursText}; the team confirms your slot.</p>
+          <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>Request a visit with the Construction team. Visits {ui.hoursText}; the team confirms your slot.</p>
           <label className="vl" htmlFor="vsProj">Project</label>
           <select className="vf" id="vsProj" value={v.project} aria-invalid={bad === 'project' || undefined} onChange={(e) => setV({ ...v, project: e.target.value })}>
             <option value="">Select project</option>
@@ -97,7 +97,7 @@ export function BookingSheet({ pre, onClose }: { pre: BookingPrefill; onClose: (
       {step === 'details' && (
         <form onSubmit={sendDetails} noValidate>
           <h3>Who should we confirm with?</h3>
-          <p className="lede" style={{ fontSize: 14 }}>{project?.name}, {fmtDay(v.date)} at {v.time} IST. We verify your number by SMS and never share it.</p>
+          <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>{project?.name}, {fmtDay(v.date)} at {v.time} IST. We verify your number by SMS and never share it.</p>
           <label className="vl" htmlFor="vsName">Name</label>
           <input className="vf" id="vsName" placeholder="Your full name" value={d.name} aria-invalid={bad === 'name' || undefined} onChange={(e) => setD({ ...d, name: e.target.value })} autoComplete="name" />
           <label className="vl" htmlFor="vsPhone">Mobile</label>
@@ -121,7 +121,7 @@ export function BookingSheet({ pre, onClose }: { pre: BookingPrefill; onClose: (
         <div>
           <p className="eyebrow">Confirmed request</p>
           <h3 style={{ marginTop: 8 }}>{project?.name}, {fmtDay(v.date)} at {v.time} IST</h3>
-          <p className="lede" style={{ fontSize: 14.5, marginTop: 8 }}>Thank you, {d.name.split(' ')[0]}. A consultant confirms the slot with you on {d.phone}, and you can track it any time in your portal.</p>
+          <p className="lede" style={{ fontSize: 'var(--fs-small)', marginTop: 8 }}>Thank you, {d.name.split(' ')[0]}. A consultant confirms the slot with you on {d.phone}, and you can track it any time in your portal.</p>
           <div className="foot"><Link href="/portal" className="btn ghost" onClick={onClose}>See it in your portal</Link><button type="button" className="btn accent" data-x>Done</button></div>
         </div>
       )}

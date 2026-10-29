@@ -10,6 +10,7 @@ import { UiProvider } from '@/components/ui/UiProvider'
 import { getProjects, getSettings, getSiteCopy } from '@/lib/content'
 import { slotsFromHours } from '@/lib/hours'
 
+import './fonts.css'
 import './globals.css'
 import './site.css'
 
@@ -43,11 +44,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" data-theme="refined">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* The root layout wraps every route, so this stylesheet loads once; the rule below targets the pages router. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
+        {/* Fonts are self-hosted from /public/fonts (see fonts.css); only the Latin files are preloaded. */}
+        <link rel="preload" href="/fonts/inter-v20-400-600-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/manrope-v23-600-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <meta name="theme-color" content="#101F3C" />
         {/* "<" is escaped so a value typed into Site settings can never close this script tag. */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, '\\u003c') }} />

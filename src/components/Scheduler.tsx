@@ -103,11 +103,11 @@ export function Scheduler({ desks, preselect, hoursText, slots: defaultSlots }: 
       {desk && (
         <>
           <p className="co-kick" style={{ marginTop: 26 }}>2 — Your consultant</p>
-          <div className="cons"><div className="av">{desk.name.split(' ').map((x) => x[0]).join('').slice(0, 2).toUpperCase()}</div><div><b>{desk.name}</b><br /><span style={{ color: 'var(--muted)', fontSize: 14 }}>{desk.role}</span></div></div>
+          <div className="cons"><div className="av">{desk.name.split(' ').map((x) => x[0]).join('').slice(0, 2).toUpperCase()}</div><div><b>{desk.name}</b><br /><span style={{ color: 'var(--muted)', fontSize: 'var(--fs-small)' }}>{desk.role}</span></div></div>
           <p className="co-kick" style={{ marginTop: 26 }}>3 — How would you like to meet?</p>
           <div className="chips-row">{desk.modes.map((m) => <button key={m} type="button" className="chip" aria-pressed={mode === m} onClick={() => setMode(m)}>{m}</button>)}</div>
           <p className="co-kick" style={{ marginTop: 26 }}>4 — Pick a slot</p>
-          <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: 0 }}>{hoursText}. Your consultant confirms the slot against their calendar.</p>
+          <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)', margin: 0 }}>{hoursText}. Your consultant confirms the slot against their calendar.</p>
           <div className="wk-wrap"><div className="wk">
             {D.map((d) => <div className="dh" key={iso(d)}>{d.toLocaleDateString('en-IN', { weekday: 'short' })}<b>{d.getDate()} {d.toLocaleDateString('en-IN', { month: 'short' })}</b></div>)}
             {slots.map((s) => D.map((d, di) => {

@@ -169,6 +169,15 @@ const promoteHeadings = (blocks: LexicalNode[], authored: boolean): LexicalNode[
   return out
 }
 
+/** Headings start at h2 under the post title: when the body's highest level is h3 or h4, every heading moves up. */
+function liftHeadings(blocks: LexicalNode[]): LexicalNode[] {
+  const level = (b: LexicalNode) => Number(String(b.tag || 'h2').slice(1)) || 2
+  const levels = blocks.filter((b) => b.type === 'heading').map(level)
+  const shift = levels.length ? Math.min(...levels) - 2 : 0
+  if (shift <= 0) return blocks
+  return blocks.map((b) => (b.type === 'heading' ? { ...b, tag: `h${Math.max(2, level(b) - shift)}` as 'h2' | 'h3' | 'h4' } : b))
+}
+
 export function tidyRichText(doc: RichTextDoc): { doc: RichTextDoc; meta: BodyMeta; changed: boolean } {
   const meta: BodyMeta = {}
   if (!doc || !doc.root || !Array.isArray(doc.root.children)) return { doc, meta, changed: false }
@@ -177,7 +186,7 @@ export function tidyRichText(doc: RichTextDoc): { doc: RichTextDoc; meta: BodyMe
   while (i < lines.length && lines[i].type === 'paragraph' && onlyText(lines[i]) && parseMeta(plainText(lines[i]), meta)) i++
   const pieces: Piece[] = lines.slice(i).map((n) => (n.type === 'paragraph' ? convertParagraph(n) : { node: n }))
   const authored = doc.root.children.some((n) => n.type === 'heading')
-  const blocks = promoteHeadings(assemble(pieces), authored)
+  const blocks = liftHeadings(promoteHeadings(assemble(pieces), authored))
   const next: RichTextDoc = { ...doc, root: { ...doc.root, children: blocks } }
   const changed = JSON.stringify(next) !== JSON.stringify(doc)
   return { doc: changed ? next : doc, meta, changed }

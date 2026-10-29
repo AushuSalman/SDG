@@ -23,7 +23,7 @@ export function ShareSheet({ options, onClose }: { options: ShareOptions; onClos
   return (
     <Modal onClose={onClose} label="Share">
       <h3>Share</h3>
-      <p className="lede" style={{ fontSize: 14 }}>{title}</p>
+      <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>{title}</p>
       <div className="share-grid">
         <a href={`https://wa.me/?text=${enc(text + ' ' + url)}`} target="_blank" rel="noopener"><IconWhatsapp />WhatsApp</a>
         <a href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`} target="_blank" rel="noopener"><IconFacebook />Facebook</a>

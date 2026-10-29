@@ -33,8 +33,8 @@ export default async function AboutPage() {
         <p className="co-kick">The Group</p>
         <h1>True gold<br /><em>since 1978.</em></h1>
         <p className="lede">{copy.aboutIntro || description}</p>
-        {description && copy.aboutIntro && <p className="lede" style={{ marginTop: 10 }}>{description}</p>}
-        {founder && <p className="lede" style={{ marginTop: 10 }}>{founder}</p>}
+        {description && copy.aboutIntro && <p className="lede" style={{ marginTop: 'var(--para-gap)' }}>{description}</p>}
+        {founder && <p className="lede" style={{ marginTop: 'var(--para-gap)' }}>{founder}</p>}
       </section>
 
       {values.length > 0 && (
@@ -60,7 +60,7 @@ export default async function AboutPage() {
             <p className="co-kick">Our story</p>
             <h2>From waste paper to the Financial District.</h2>
             <span className="rule-line" />
-            {copy.origins && <p className="lede" style={{ fontSize: 16 }}>{copy.origins}</p>}
+            {copy.origins && <p className="lede" style={{ fontSize: 'var(--fs-body)' }}>{copy.origins}</p>}
           </div>
         </div>
         <p className="co-kick">Key milestones</p>
@@ -72,9 +72,9 @@ export default async function AboutPage() {
       <section className="co-section" style={{ paddingTop: 0 }} id="verticals">
         <p className="co-kick">Verticals</p>
         <div className="grid g3 verticals">
-          <div className="card"><p className="co-kick">01 — Build</p><h3>Suvarna Durga Constructions</h3><p className="lede" style={{ fontSize: 15, marginTop: 8 }}>{vertical('construction') || 'Residential and Grade A commercial across Hyderabad, every project RERA registered and published.'}</p><p style={{ marginTop: 14 }}><Link className="btn ghost sm" href="/real-estate">Constructions →</Link></p></div>
-          <div className="card"><p className="co-kick">02 — Make</p><h3>Suvarna Durga Paper</h3><p className="lede" style={{ fontSize: 15, marginTop: 8 }}>{vertical('paper') || 'Machine-finished kraft from Sangareddy, 100 to 250 GSM and 18 to 28 BF, FSC and RoHS certified.'}</p><p style={{ marginTop: 14 }}><Link className="btn ghost sm" href="/paper">Paper →</Link></p></div>
-          <div className="card"><p className="co-kick">03 — Renew</p><h3>Suvarna Durga Bottles</h3><p className="lede" style={{ fontSize: 15, marginTop: 8 }}>{vertical('glass') || 'Returnable bottles recovered, washed and supplied back to fillers through eleven warehouses across two states.'}</p><p style={{ marginTop: 14 }}><Link className="btn ghost sm" href="/glass">Glass bottles →</Link></p></div>
+          <div className="card"><p className="co-kick">01 — Build</p><h3>Suvarna Durga Constructions</h3><p className="lede" style={{ fontSize: 'var(--fs-small)', marginTop: 8 }}>{vertical('construction') || 'Residential and Grade A commercial across Hyderabad, every project RERA registered and published.'}</p><p style={{ marginTop: 14 }}><Link className="btn ghost sm" href="/real-estate">Constructions →</Link></p></div>
+          <div className="card"><p className="co-kick">02 — Make</p><h3>Suvarna Durga Paper</h3><p className="lede" style={{ fontSize: 'var(--fs-small)', marginTop: 8 }}>{vertical('paper') || 'Machine-finished kraft from Sangareddy, 100 to 250 GSM and 18 to 28 BF, FSC and RoHS certified.'}</p><p style={{ marginTop: 14 }}><Link className="btn ghost sm" href="/paper">Paper →</Link></p></div>
+          <div className="card"><p className="co-kick">03 — Renew</p><h3>Suvarna Durga Bottles</h3><p className="lede" style={{ fontSize: 'var(--fs-small)', marginTop: 8 }}>{vertical('glass') || 'Returnable bottles recovered, washed and supplied back to fillers through eleven warehouses across two states.'}</p><p style={{ marginTop: 14 }}><Link className="btn ghost sm" href="/glass">Glass bottles →</Link></p></div>
         </div>
       </section>
 
@@ -91,7 +91,7 @@ export default async function AboutPage() {
               <p className="co-kick">Legacy · Sri Jakkireddy Subbareddy</p>
               <h2>{copy.legacyTitle || 'A founding father and a great visionary'}</h2>
               <span className="rule-line" />
-              {legacy.map((p, i) => <p key={i} className="lede" style={{ fontSize: 16, marginTop: i ? 12 : 0 }}>{p}</p>)}
+              {legacy.map((p, i) => <p key={i} className="lede" style={{ fontSize: 'var(--fs-body)', marginTop: i ? 'var(--para-gap)' : 0 }}>{p}</p>)}
               <p className="btn-row" style={{ marginTop: 20 }}><Link className="btn accent" href="/leadership">Meet the leadership</Link><Link className="btn ghost" href="/contact">Contact the Group</Link></p>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default async function AboutPage() {
           <p className="co-kick">Corporate social responsibility</p>
           <h2>Giving back, from day one.</h2>
           <div className="grid g2" style={{ alignItems: 'start', marginTop: 18 }}>
-            <div>{csrBody.map((p, i) => <p key={i} className="lede" style={{ fontSize: 16, marginTop: i ? 12 : 0 }}>{p}</p>)}</div>
+            <div>{csrBody.map((p, i) => <p key={i} className="lede" style={{ fontSize: 'var(--fs-body)', marginTop: i ? 'var(--para-gap)' : 0 }}>{p}</p>)}</div>
             {csr.length > 0 && (
               <div className="csr-facts">
                 {csr.map((f) => <div key={f.id}>{f.value && <b>{f.value}</b>}<span>{f.wording}</span></div>)}

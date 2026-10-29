@@ -46,7 +46,7 @@ export function ProjectTabs({ d }: { d: TabData }) {
               // eslint-disable-next-line @next/next/no-img-element
               <img className="plan" src={(d.floorPlans[unit] || d.floorPlans[0]).src} alt={(d.floorPlans[unit] || d.floorPlans[0]).alt} />
             ) : (
-              <p className="lede" style={{ fontSize: 15 }}>
+              <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>
                 {d.configurations.length > 0
                   ? `${d.configurations.length} ${res ? 'configuration' : 'option'}${d.configurations.length > 1 ? 's' : ''}. Drawings are shared by the project team with the brochure.`
                   : 'Floor plates and drawings are shared by the project team with the brochure.'}
@@ -59,12 +59,12 @@ export function ProjectTabs({ d }: { d: TabData }) {
         )}
         {t === 1 && (
           <div className="spec">
-            {d.specs.length === 0 && <p className="lede" style={{ fontSize: 15 }}>Specifications are published with the brochure.</p>}
+            {d.specs.length === 0 && <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>Specifications are published with the brochure.</p>}
             {d.specs.map(([k, v], i) => <details key={k} open={i === 0}><summary>{k}</summary><p>{v}</p></details>)}
             {d.highlights.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <p className="eyebrow">Highlights</p>
-                <ul style={{ margin: '10px 0 0', paddingLeft: 18, color: 'var(--ink2)', fontSize: 14.5, lineHeight: 1.7 }}>{d.highlights.map((h) => <li key={h}>{h}</li>)}</ul>
+                <ul style={{ margin: '10px 0 0', paddingLeft: 18, color: 'var(--ink2)', fontSize: 'var(--fs-body)', lineHeight: 'var(--lh-body)' }}>{d.highlights.map((h) => <li key={h}>{h}</li>)}</ul>
               </div>
             )}
           </div>
@@ -103,7 +103,7 @@ export function ProjectTabs({ d }: { d: TabData }) {
         )}
         {t === 4 && (
           <div className="faq-list">
-            {d.faqs.length === 0 && <p className="lede" style={{ fontSize: 15 }}>No published questions for this project yet. Ask the AI consultant or book a visit.</p>}
+            {d.faqs.length === 0 && <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>No published questions for this project yet. Ask the AI consultant or book a visit.</p>}
             {d.faqs.map((f) => <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>)}
           </div>
         )}

@@ -44,7 +44,7 @@ export function BrochureSheet({ target, onClose }: { target: BrochureTarget; onC
     <Modal onClose={onClose} label={`${target.name} brochure`}>
       <form onSubmit={submit} noValidate>
         <h3>{target.name} brochure</h3>
-        <p className="lede" style={{ fontSize: 14 }}>Floor plans, specifications and the payment schedule. Tell us where to send it; a copy also goes to your WhatsApp.</p>
+        <p className="lede" style={{ fontSize: 'var(--fs-small)' }}>Floor plans, specifications and the payment schedule. Tell us where to send it; a copy also goes to your WhatsApp.</p>
         <label className="vl" htmlFor="brName">Name</label>
         <input className="vf" id="brName" placeholder="Your full name" value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })} autoComplete="name" />
         <label className="vl" htmlFor="brPhone">Mobile</label>

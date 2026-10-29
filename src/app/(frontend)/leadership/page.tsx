@@ -45,8 +45,8 @@ export default async function LeadershipPage() {
         <p className="co-kick">Leadership</p>
         <h1>A history of<br /><em>posting success.</em></h1>
         {success.length === 0 && <p className="lede">Founded by Sri Jakkireddy Subbareddy in 1978 and led today by the second generation across constructions, paper and glass bottles.</p>}
-        {success.map((p, i) => <p key={i} className="lede" style={{ marginTop: i ? 10 : undefined }}>{p}</p>)}
-        {facts.map((f) => <p key={f.id} className="lede" style={{ marginTop: 10 }}>{f.wording}</p>)}
+        {success.map((p, i) => <p key={i} className="lede" style={{ marginTop: i ? 'var(--para-gap)' : undefined }}>{p}</p>)}
+        {facts.map((f) => <p key={f.id} className="lede" style={{ marginTop: 'var(--para-gap)' }}>{f.wording}</p>)}
       </section>
       <section className="co-section" style={{ paddingTop: 16 }}>
         {leaders.length === 0 && <p className="notice">Leadership profiles are added in the admin under Website → Leadership.</p>}

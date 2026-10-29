@@ -68,7 +68,7 @@ export default async function AgroPage() {
                 <p className="process-kick">Leveraging our strengths</p>
                 <h2>Procurement and supply chain, done at source.</h2>
               </div>
-              <div>{strengths.map((p, i) => <p key={i} className="lede" style={{ fontSize: 16, marginTop: i ? 12 : 0 }}>{p}</p>)}</div>
+              <div>{strengths.map((p, i) => <p key={i} className="lede" style={{ fontSize: 'var(--fs-body)', marginTop: i ? 'var(--para-gap)' : 0 }}>{p}</p>)}</div>
             </div>
           </div>
         </section>

@@ -5,7 +5,7 @@ enquiry pipeline and the AI assistant. MongoDB Atlas (Mumbai) is the database, S
 Amazon Bedrock's India inference profile powers the assistant. Deployed as one Docker container behind
 Caddy on an AWS Lightsail server, built and shipped from Azure DevOps.
 
-Design: the public site uses the Refined skin (navy and brass on cream, Fraunces headlines, Inter body, pill
+Design: the public site uses the Refined skin (navy and brass on cream, Manrope headings, Inter body, self-hosted fonts, pill
 buttons) per `../docs/sdg-design-tokens.md`, reference wireframe `../sdg-wireframe-refined.html`. The staff
 admin uses the TailAdmin Pro 2.2 theme (Outfit, brand blue, white cards on gray); see "Admin" below.
 Architecture: team v3, 13 Oct 2026.

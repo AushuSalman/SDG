@@ -53,7 +53,7 @@ export function ReadinessWizard({ projects }: { projects: WizProject[] }) {
         <div className="wiz-bar"><i style={{ width: '100%' }} /></div>
         <p className="wiz-step">Your result</p>
         <h3>{tier[0]}</h3>
-        <div className="score"><div className="ring2" style={{ ['--p' as string]: `${Math.round((score / MAX) * 100)}%` }}><span>{score}/{MAX}</span></div><p className="lede" style={{ fontSize: 15, margin: 0 }}>{tier[1]}</p></div>
+        <div className="score"><div className="ring2" style={{ ['--p' as string]: `${Math.round((score / MAX) * 100)}%` }}><span>{score}/{MAX}</span></div><p className="lede" style={{ fontSize: 'var(--fs-small)', margin: 0 }}>{tier[1]}</p></div>
         {recs.length > 0 && (
           <>
             <p className="co-kick">Recommended for you</p>

@@ -92,3 +92,11 @@ describe('tagList', () => {
     expect(tagList(null)).toEqual([])
   })
 })
+
+describe('heading levels', () => {
+  it('lifts the body so its headings start at h2 under the post title', () => {
+    const h = (tag: 'h3' | 'h4', t: string) => ({ type: 'heading', tag, version: 1, children: [text(t)] })
+    const out = tidyRichText(doc(h('h3', 'Section'), para('Body text here.'), h('h4', 'Detail'), para('More body text.'))).doc
+    expect(types(out)).toEqual(['h2', 'paragraph', 'h3', 'paragraph'])
+  })
+})

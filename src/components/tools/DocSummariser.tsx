@@ -52,12 +52,12 @@ export function DocSummariser({ docs }: { docs: DocRow[] }) {
       </div>
       <div className="card" aria-live="polite">
         {!cur ? (
-          <><span className="eyebrow">Summary</span><p className="lede" style={{ fontSize: 15, marginTop: 8 }}>Pick a document to see its key points, then ask a follow-up question.</p></>
+          <><span className="eyebrow">Summary</span><p className="lede" style={{ fontSize: 'var(--fs-small)', marginTop: 8 }}>Pick a document to see its key points, then ask a follow-up question.</p></>
         ) : (
           <>
             <span className="eyebrow">Summary · {cur.title}</span>
             <h3 style={{ margin: '8px 0 12px' }}>Key points</h3>
-            <div style={{ whiteSpace: 'pre-wrap', color: 'var(--ink2)', fontSize: 15, lineHeight: 1.7 }}>{text || (busy ? '…' : '')}</div>
+            <div style={{ whiteSpace: 'pre-wrap', color: 'var(--ink2)', fontSize: 'var(--fs-small)', lineHeight: 1.7 }}>{text || (busy ? '…' : '')}</div>
             <form className="askrow" onSubmit={(e) => { e.preventDefault(); const t = q.trim(); if (t) { ui.openAI(`${t} (about ${cur.title})`); setQ('') } }}>
               <input placeholder="Ask a follow-up about this document" aria-label="Follow-up question" value={q} onChange={(e) => setQ(e.target.value)} />
               <button className="btn accent sm" type="submit">Ask</button>

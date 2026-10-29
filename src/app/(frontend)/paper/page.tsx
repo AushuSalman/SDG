@@ -123,8 +123,8 @@ export default async function PaperPage() {
         <section className="pp-growth">
           <div className="wrap">
             <p className="process-kick">Growth</p>
-            <div className="spec-grid" style={{ marginTop: 24 }}>
-              {growth.map((f) => <div key={f.id}><b className="big">{f.value}</b><span>{f.wording}</span></div>)}
+            <div className="pp-growth-grid">
+              {growth.map((f) => <div key={f.id}><b className="num">{f.value}</b><em>{f.claim}</em><span>{f.wording}</span></div>)}
             </div>
           </div>
         </section>

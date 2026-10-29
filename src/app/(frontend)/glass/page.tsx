@@ -105,7 +105,7 @@ export default async function GlassPage() {
                 <p className="gl-kick">Warehouse locations</p>
                 <h2>A network across two states.</h2>
                 <span className="gl-rule" style={{ marginInline: 0 }} />
-                {copy.glassWarehouses && <p className="lede" style={{ fontSize: 16 }}>{copy.glassWarehouses}</p>}
+                {copy.glassWarehouses && <p className="lede" style={{ fontSize: 'var(--fs-body)' }}>{copy.glassWarehouses}</p>}
               </div>
               {map && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -136,7 +136,7 @@ export default async function GlassPage() {
           <div className="wrap">
             <p className="gl-kick">Pilot project</p>
             <h2>Automated plant.</h2>
-            {copy.glassPilot && <p className="gl-sub" style={{ maxWidth: '64ch', marginInline: 'auto' }}>{copy.glassPilot}</p>}
+            {copy.glassPilot && <p className="gl-sub" style={{ maxWidth: '60ch' }}>{copy.glassPilot}</p>}
             <PhotoGrid photos={plant} columns={4} />
           </div>
         </section>

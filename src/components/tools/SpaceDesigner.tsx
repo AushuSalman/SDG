@@ -35,20 +35,20 @@ export function SpaceDesigner({ buildings }: { buildings: SpaceOption[] }) {
         <div className="opt-row">{LAYOUTS.map((o, i) => <button key={o} type="button" className="chip" aria-pressed={layout === i} onClick={() => { setLayout(i); setGenerated(false) }}>{o}</button>)}</div>
         <div className="eyebrow" style={{ marginTop: 16 }}>Services</div>
         <div className="opt-row">{SERVICES.map((o) => <button key={o} type="button" className="chip" aria-pressed={svc.has(o)} onClick={() => { toggle(o); setGenerated(false) }}>{o}</button>)}</div>
-        <p style={{ marginTop: 18, fontSize: 14 }}>Indicative fit: {fit.length ? fit.map((b, i) => <React.Fragment key={b.slug}>{i > 0 && ' · '}<strong>{b.name}</strong></React.Fragment>) : <strong>to be advised by SDG leasing</strong>}</p>
+        <p style={{ marginTop: 18, fontSize: 'var(--fs-small)' }}>Indicative fit: {fit.length ? fit.map((b, i) => <React.Fragment key={b.slug}>{i > 0 && ' · '}<strong>{b.name}</strong></React.Fragment>) : <strong>to be advised by SDG leasing</strong>}</p>
         <button type="button" className="btn accent" style={{ marginTop: 14 }} onClick={() => { setGenerated(true); ui.toast('Indicative proposal prepared') }}>Generate proposal</button>
       </div>
       <div>
         <div className="doc" aria-live="polite">
           <div className="wm"><span>INDICATIVE — NOT A BINDING OFFER</span></div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: '#777' }}>PROPOSAL {ref} · v1 {generated ? '' : '· draft'}</div>
+          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)' }}>PROPOSAL {ref} · v1 {generated ? '' : '· draft'}</div>
           <h3 style={{ margin: '8px 0 14px' }}>Office space: {LAYOUTS[layout]} layout, {AREAS[area]}</h3>
           <div className="row"><span>Recommended building</span><span>{fit[0] ? `${fit[0].name}, ${fit[0].location}` : 'To be advised'}</span></div>
           {fit[0]?.floorPlate && <div className="row"><span>Floor plates</span><span>{fit[0].floorPlate}</span></div>}
           <div className="row"><span>Services</span><span>{[...svc].join(', ') || 'None selected'}</span></div>
           <div className="row"><span>Rent</span><span>On request, confirmed by SDG leasing</span></div>
           <div className="row"><span>Earliest handover</span><span>{fit[0]?.status === 'completed' ? 'Ready, subject to availability' : 'Target, subject to confirmation'}</span></div>
-          <p style={{ fontSize: 11.5, color: '#777', marginTop: 14 }}>Generated from SDG-approved options. Not an offer, commitment or representation by SDG.</p>
+          <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--muted)', marginTop: 14 }}>Generated from SDG-approved options. Not an offer, commitment or representation by SDG.</p>
         </div>
         <div className="approve">
           <span className="state">Awaiting SDG review</span>
