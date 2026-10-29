@@ -85,12 +85,12 @@ button.trio-scroll:hover .trio-dashes i { background: var(--gold); }
 
 .ledger { background: var(--ground); padding-block: 96px; }
 .ledger-rows { border-top: 0; }
-.lrow { display: grid; grid-template-columns: 48px 190px 150px 1fr 24px; gap: 22px; align-items: center; padding: 30px 0; text-decoration: none; color: var(--ink); transition: padding .3s ease; }
+.lrow { display: grid; grid-template-columns: 48px 190px minmax(calc(var(--fs-figure-sm) * 4.1), auto) 1fr 24px; /* the figure column follows the figure size, so numbers such as 175,000 never run into their label */ gap: 22px; align-items: center; padding: 30px 0; text-decoration: none; color: var(--ink); transition: padding .3s ease; }
 .lrow:hover { padding-left: 14px; }
 .l-n { font-size: var(--fs-caption); letter-spacing: .18em; color: var(--muted); }
 .l-name { font-family: var(--display); font-weight: 600; letter-spacing: -.02em; font-size: var(--fs-h3); }
 .lrow:hover .l-name { color: var(--au-text); }
-.l-big { font-family: var(--display); font-weight: 600; letter-spacing: -.02em; font-size: var(--fs-figure-sm); }
+.l-big { font-family: var(--display); font-weight: 600; letter-spacing: -.02em; font-size: var(--fs-figure-sm); white-space: nowrap; }
 .l-unit { color: var(--muted); font-size: var(--fs-caption); }
 .l-go { font-style: normal; justify-self: end; color: var(--muted); }
 @media (max-width: 980px) { .lrow { grid-template-columns: 44px 1fr auto; row-gap: 12px; } .l-unit { grid-column: 2 / -1; } }
